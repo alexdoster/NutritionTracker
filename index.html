@@ -433,6 +433,23 @@ function saveFood(meal) {
   LS.set("mt_foods", foods);
 }
 
+const SEED_FOODS = [
+  { name: "Protein shake", cal: 545, pro: 39, carb: 61, fat: 18 }
+];
+
+function seedFoods() {
+  const foods = getFoods() || {};
+  let changed = false;
+  SEED_FOODS.forEach(f => {
+    const k = f.name.trim().toLowerCase();
+    if (!foods[k]) {
+      foods[k] = { name: f.name, cal: f.cal, pro: f.pro, carb: f.carb, fat: f.fat, count: 0, last: 0 };
+      changed = true;
+    }
+  });
+  if (changed) LS.set("mt_foods", foods);
+}
+
 function migrateFoods() {
   if (getFoods() !== null) return;
   const foods = {};
@@ -1066,6 +1083,7 @@ $("btn-discard").onclick = () => { confirmBase = null; show("screen-main"); };
 /* ---------- Boot ---------- */
 
 migrateFoods();
+seedFoods();
 
 if (LS.get("mt_apiKey", "") && LS.get("mt_targets", null)) {
   renderMain();
