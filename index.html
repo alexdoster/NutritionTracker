@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Macros">
+<meta name="theme-color" content="#fcfcfb" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1a1a19" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>Macros</title>
+<style>
+:root {
+  --surface-1: #fcfcfb;
+  --page: #f9f9f7;
+  --text-primary: #0b0b0b;
+  --text-secondary: #52514e;
+  --text-muted: #898781;
+  --hairline: #e1e0d9;
+  --border: rgba(11,11,11,0.10);
+  --accent: #2a78d6;
+  --accent-deep: #1c5cab;
+  --track: #cde2fb;
+  --good: #006300;
+  --critical: #d03b3b;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --surface-1: #1a1a19;
+    --page: #0d0d0d;
+    --text-primary: #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted: #898781;
+    --hairline: #2c2c2a;
+    --border: rgba(255,255,255,0.10);
+    --accent: #3987e5;
+    --accent-deep: #6da7ec;
+    --track: #0d366b;
+    --good: #0ca30c;
+    --critical: #e66767;
+  }
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; }
+body {
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: var(--page);
+  color: var(--text-primary);
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+.screen { display: none; max-width: 480px; margin: 0 auto; padding: 20px 16px 40px; }
+.screen.active { display: block; }
+
+h1 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+h2 { font-size: 16px; font-weight: 600; margin: 20px 0 8px; }
+.sub { color: var(--text-secondary); font-size: 14px; margin-bottom: 16px; }
+
+.card {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+/* Stat tiles with meters */
+.stat { margin-bottom: 14px; }
+.stat:last-child { margin-bottom: 0; }
+.stat-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+.stat-label { font-size: 13px; color: var(--text-secondary); }
+.stat-val { font-size: 15px; color: var(--text-secondary); }
+.stat-val b { font-size: 17px; font-weight: 600; color: var(--text-primary); }
+.meter { height: 10px; border-radius: 5px; background: var(--track); overflow: hidden; }
+.meter-fill { height: 100%; border-radius: 5px; background: var(--accent); width: 0%; transition: width 0.4s ease; }
+.stat-over { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+
+.topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.datebadge { font-size: 13px; color: var(--text-muted); }
+.iconbtn {
+  background: none; border: none; font-size: 20px; color: var(--text-secondary);
+  cursor: pointer; padding: 6px;
+}
+
+button.primary {
+  display: block; width: 100%;
+  background: var(--accent); color: #ffffff;
+  border: none; border-radius: 12px;
+  font-size: 17px; font-weight: 600; font-family: inherit;
+  padding: 16px; margin: 16px 0; cursor: pointer;
+}
+button.primary:active { background: var(--accent-deep); }
+button.primary:disabled { opacity: 0.5; }
+button.secondary {
+  display: block; width: 100%;
+  background: none; color: var(--text-secondary);
+  border: 1px solid var(--border); border-radius: 12px;
+  font-size: 15px; font-family: inherit;
+  padding: 12px; margin-top: 8px; cursor: pointer;
+}
+
+/* Entries */
+.entry { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--hairline); }
+.entry:last-child { border-bottom: none; }
+.entry-name { font-size: 15px; font-weight: 500; }
+.entry-detail { font-size: 12.5px; color: var(--text-muted); margin-top: 2px; font-variant-numeric: tabular-nums; }
+.entry-del { background: none; border: none; color: var(--text-muted); font-size: 17px; padding: 8px; cursor: pointer; }
+.empty { color: var(--text-muted); font-size: 14px; text-align: center; padding: 20px 0; }
+
+/* Forms */
+label.field { display: block; font-size: 13px; color: var(--text-secondary); margin: 12px 0 4px; }
+input, select {
+  width: 100%; font-size: 16px; font-family: inherit;
+  padding: 12px; border: 1px solid var(--border); border-radius: 10px;
+  background: var(--surface-1); color: var(--text-primary);
+  appearance: none; -webkit-appearance: none;
+}
+.row2 { display: flex; gap: 10px; }
+.row2 > div { flex: 1; }
+
+.status { font-size: 14px; text-align: center; padding: 10px 0; color: var(--text-secondary); min-height: 24px; }
+.status.err { color: var(--critical); }
+
+/* Analyzing overlay */
+#analyzing { position: fixed; inset: 0; background: var(--page); display: none; z-index: 50;
+  flex-direction: column; align-items: center; justify-content: center; gap: 16px; }
+#analyzing.active { display: flex; }
+.spinner { width: 36px; height: 36px; border: 3px solid var(--track); border-top-color: var(--accent);
+  border-radius: 50%; animation: spin 0.9s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+#preview-img { max-width: 200px; max-height: 200px; border-radius: 12px; object-fit: cover; }
+
+/* Confirm sheet */
+.item-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--hairline); font-size: 15px; }
+.item-row:last-child { border-bottom: none; }
+.item-macros { color: var(--text-muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+.totals { display: flex; justify-content: space-between; padding-top: 12px; margin-top: 4px; border-top: 1px solid var(--hairline); font-weight: 600; }
+.notes { font-size: 13px; color: var(--text-muted); margin-top: 10px; }
+</style>
+</head>
+<body>
+
+<!-- SETUP / SETTINGS -->
+<div class="screen" id="screen-setup">
+  <h1 id="setup-title">Set up</h1>
+  <p class="sub">Your info stays on this phone. It is only used to calculate your daily targets.</p>
+
+  <div class="card">
+    <label class="field">Anthropic API key</label>
+    <input type="password" id="f-key" placeholder="sk-ant-..." autocomplete="off">
+
+    <div class="row2">
+      <div>
+        <label class="field">Age</label>
+        <input type="number" id="f-age" inputmode="numeric" placeholder="45">
+      </div>
+      <div>
+        <label class="field">Sex</label>
+        <select id="f-sex"><option value="m">Male</option><option value="f">Female</option></select>
+      </div>
+    </div>
+
+    <div class="row2">
+      <div>
+        <label class="field">Weight (lb)</label>
+        <input type="number" id="f-weight" inputmode="numeric" placeholder="185">
+      </div>
+      <div>
+        <label class="field">Height</label>
+        <div class="row2">
+          <input type="number" id="f-ft" inputmode="numeric" placeholder="ft">
+          <input type="number" id="f-in" inputmode="numeric" placeholder="in">
+        </div>
+      </div>
+    </div>
+
+    <label class="field">Activity level</label>
+    <select id="f-activity">
+      <option value="1.2">Sedentary, desk job, little exercise</option>
+      <option value="1.375">Light, exercise 1 to 3 days a week</option>
+      <option value="1.55">Moderate, exercise 3 to 5 days a week</option>
+      <option value="1.725">Very active, exercise 6 to 7 days a week</option>
+    </select>
+
+    <label class="field">Goal</label>
+    <select id="f-goal">
+      <option value="-500">Lose weight</option>
+      <option value="0" selected>Maintain</option>
+      <option value="300">Gain muscle</option>
+    </select>
+  </div>
+
+  <button class="primary" id="btn-calc">Calculate targets</button>
+
+  <div class="card" id="targets-card" style="display:none">
+    <h2 style="margin-top:0">Daily targets</h2>
+    <p class="sub">Calculated from your info. Edit any number before saving.</p>
+    <div class="row2">
+      <div><label class="field">Calories</label><input type="number" id="t-cal" inputmode="numeric"></div>
+      <div><label class="field">Protein (g)</label><input type="number" id="t-pro" inputmode="numeric"></div>
+    </div>
+    <div class="row2">
+      <div><label class="field">Carbs (g)</label><input type="number" id="t-carb" inputmode="numeric"></div>
+      <div><label class="field">Fat (g)</label><input type="number" id="t-fat" inputmode="numeric"></div>
+    </div>
+    <button class="primary" id="btn-save" style="margin-bottom:0">Save and start</button>
+  </div>
+
+  <div class="status err" id="setup-status"></div>
+  <button class="secondary" id="btn-cancel-setup" style="display:none">Cancel</button>
+</div>
+
+<!-- MAIN -->
+<div class="screen" id="screen-main">
+  <div class="topbar">
+    <div>
+      <h1>Today</h1>
+      <div class="datebadge" id="today-label"></div>
+    </div>
+    <button class="iconbtn" id="btn-settings" aria-label="Settings">&#9881;</button>
+  </div>
+
+  <div class="card" id="meters"></div>
+
+  <button class="primary" id="btn-photo">&#128247;&nbsp; Snap a meal</button>
+  <input type="file" id="file-input" accept="image/*" capture="environment" style="display:none">
+
+  <h2>Meals</h2>
+  <div class="card" id="entries"></div>
+
+  <div class="status err" id="main-status"></div>
+</div>
+
+<!-- CONFIRM -->
+<div class="screen" id="screen-confirm">
+  <h1>Looks like...</h1>
+  <p class="sub">Estimates from the photo. Add it to your day or discard it.</p>
+  <div class="card">
+    <div id="confirm-items"></div>
+    <div class="totals"><span id="confirm-name">Meal</span><span id="confirm-total"></span></div>
+    <p class="notes" id="confirm-notes"></p>
+  </div>
+  <button class="primary" id="btn-add">Add to today</button>
+  <button class="secondary" id="btn-discard">Discard</button>
+</div>
+
+<!-- ANALYZING -->
+<div id="analyzing">
+  <img id="preview-img" alt="">
+  <div class="spinner"></div>
+  <div class="status">Analyzing your meal...</div>
+</div>
+
+<script>
+"use strict";
+
+const $ = (id) => document.getElementById(id);
+const LS = {
+  get(k, fallback) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : fallback; } catch { return fallback; } },
+  set(k, v) { localStorage.setItem(k, JSON.stringify(v)); }
+};
+
+const todayKey = () => {
+  const d = new Date();
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+};
+
+let pendingMeal = null;
+
+/* ---------- Targets ---------- */
+
+function calcTargets(p) {
+  const kg = p.weight * 0.4536;
+  const cm = (p.ft * 12 + p.inch) * 2.54;
+  let bmr = 10 * kg + 6.25 * cm - 5 * p.age;
+  bmr += p.sex === "m" ? 5 : -161;
+  const cal = Math.round((bmr * p.activity + p.goal) / 10) * 10;
+  const pro = Math.round(p.weight * 0.8);
+  const fat = Math.round(cal * 0.30 / 9);
+  const carb = Math.round((cal - pro * 4 - fat * 9) / 4);
+  return { cal, pro, carb, fat };
+}
+
+/* ---------- Screens ---------- */
+
+function show(id) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  $(id).classList.add("active");
+  window.scrollTo(0, 0);
+}
+
+function openSetup(isEdit) {
+  $("setup-title").textContent = isEdit ? "Settings" : "Set up";
+  $("btn-cancel-setup").style.display = isEdit ? "block" : "none";
+  const key = LS.get("mt_apiKey", "");
+  const prof = LS.get("mt_profile", null);
+  const t = LS.get("mt_targets", null);
+  $("f-key").value = key;
+  if (prof) {
+    $("f-age").value = prof.age; $("f-sex").value = prof.sex;
+    $("f-weight").value = prof.weight; $("f-ft").value = prof.ft; $("f-in").value = prof.inch;
+    $("f-activity").value = prof.activity; $("f-goal").value = prof.goal;
+  }
+  if (t) {
+    $("t-cal").value = t.cal; $("t-pro").value = t.pro; $("t-carb").value = t.carb; $("t-fat").value = t.fat;
+    $("targets-card").style.display = "block";
+  } else {
+    $("targets-card").style.display = "none";
+  }
+  $("setup-status").textContent = "";
+  show("screen-setup");
+}
+
+$("btn-calc").onclick = () => {
+  const p = readProfile();
+  if (!p) return;
+  const t = calcTargets(p);
+  $("t-cal").value = t.cal; $("t-pro").value = t.pro; $("t-carb").value = t.carb; $("t-fat").value = t.fat;
+  $("targets-card").style.display = "block";
+  $("targets-card").scrollIntoView({ behavior: "smooth" });
+};
+
+function readProfile() {
+  const p = {
+    age: +$("f-age").value, sex: $("f-sex").value,
+    weight: +$("f-weight").value, ft: +$("f-ft").value, inch: +$("f-in").value || 0,
+    activity: +$("f-activity").value, goal: +$("f-goal").value
+  };
+  if (!p.age || !p.weight || !p.ft) {
+    $("setup-status").textContent = "Fill in age, weight, and height first.";
+    return null;
+  }
+  $("setup-status").textContent = "";
+  return p;
+}
+
+$("btn-save").onclick = () => {
+  const key = $("f-key").value.trim();
+  if (!key) { $("setup-status").textContent = "Paste your Anthropic API key."; return; }
+  const p = readProfile();
+  if (!p) return;
+  const t = { cal: +$("t-cal").value, pro: +$("t-pro").value, carb: +$("t-carb").value, fat: +$("t-fat").value };
+  if (!t.cal || !t.pro) { $("setup-status").textContent = "Targets look empty. Tap Calculate targets first."; return; }
+  LS.set("mt_apiKey", key);
+  LS.set("mt_profile", p);
+  LS.set("mt_targets", t);
+  renderMain();
+  show("screen-main");
+};
+
+$("btn-cancel-setup").onclick = () => show("screen-main");
+$("btn-settings").onclick = () => openSetup(true);
+
+/* ---------- Main rendering ---------- */
+
+function getEntries() {
+  const all = LS.get("mt_entries", {});
+  return all[todayKey()] || [];
+}
+function setEntries(list) {
+  const all = LS.get("mt_entries", {});
+  all[todayKey()] = list;
+  const keys = Object.keys(all).sort();
+  while (keys.length > 30) delete all[keys.shift()];
+  LS.set("mt_entries", all);
+}
+
+const fmt = (n) => Math.round(n).toLocaleString("en-US");
+
+function renderMain() {
+  const t = LS.get("mt_targets", { cal: 2000, pro: 150, carb: 200, fat: 65 });
+  const entries = getEntries();
+  const sum = entries.reduce((a, e) => ({
+    cal: a.cal + e.cal, pro: a.pro + e.pro, carb: a.carb + e.carb, fat: a.fat + e.fat
+  }), { cal: 0, pro: 0, carb: 0, fat: 0 });
+
+  $("today-label").textContent = new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+
+  const rows = [
+    { label: "Calories", cur: sum.cal, tgt: t.cal, unit: "kcal" },
+    { label: "Protein", cur: sum.pro, tgt: t.pro, unit: "g" },
+    { label: "Carbs", cur: sum.carb, tgt: t.carb, unit: "g" },
+    { label: "Fat", cur: sum.fat, tgt: t.fat, unit: "g" }
+  ];
+  $("meters").innerHTML = rows.map(r => {
+    const pct = r.tgt > 0 ? Math.min(100, r.cur / r.tgt * 100) : 0;
+    const over = r.cur > r.tgt ? `<div class="stat-over">${fmt(r.cur - r.tgt)} ${r.unit} over target</div>` : "";
+    return `<div class="stat">
+      <div class="stat-head">
+        <span class="stat-label">${r.label}</span>
+        <span class="stat-val"><b>${fmt(r.cur)}</b> / ${fmt(r.tgt)} ${r.unit}</span>
+      </div>
+      <div class="meter"><div class="meter-fill" style="width:${pct}%"></div></div>
+      ${over}
+    </div>`;
+  }).join("");
+
+  if (entries.length === 0) {
+    $("entries").innerHTML = `<div class="empty">Nothing logged yet. Snap your first meal.</div>`;
+  } else {
+    $("entries").innerHTML = entries.map((e, i) => `
+      <div class="entry">
+        <div>
+          <div class="entry-name">${escapeHtml(e.name)}</div>
+          <div class="entry-detail">${e.time} &middot; ${fmt(e.cal)} kcal &middot; P ${fmt(e.pro)} &middot; C ${fmt(e.carb)} &middot; F ${fmt(e.fat)}</div>
+        </div>
+        <button class="entry-del" data-i="${i}" aria-label="Delete">&#10005;</button>
+      </div>`).join("");
+    $("entries").querySelectorAll(".entry-del").forEach(btn => {
+      btn.onclick = () => {
+        const list = getEntries();
+        list.splice(+btn.dataset.i, 1);
+        setEntries(list);
+        renderMain();
+      };
+    });
+  }
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+/* ---------- Photo capture and analysis ---------- */
+
+$("btn-photo").onclick = () => $("file-input").click();
+
+$("file-input").onchange = async () => {
+  const file = $("file-input").files[0];
+  $("file-input").value = "";
+  if (!file) return;
+  $("main-status").textContent = "";
+  try {
+    const dataUrl = await resizeImage(file, 1200, 0.85);
+    $("preview-img").src = dataUrl;
+    $("analyzing").classList.add("active");
+    const result = await analyzeMeal(dataUrl.split(",")[1]);
+    $("analyzing").classList.remove("active");
+    showConfirm(result);
+  } catch (err) {
+    $("analyzing").classList.remove("active");
+    $("main-status").textContent = friendlyError(err);
+  }
+};
+
+function resizeImage(file, maxDim, quality) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.round(img.width * scale);
+      canvas.height = Math.round(img.height * scale);
+      canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+      resolve(canvas.toDataURL("image/jpeg", quality));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Could not read that photo.")); };
+    img.src = url;
+  });
+}
+
+const MEAL_SCHEMA = {
+  type: "object",
+  properties: {
+    meal_name: { type: "string", description: "Short name for the whole meal, e.g. Chicken burrito bowl" },
+    items: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          name: { type: "string" },
+          portion: { type: "string", description: "Estimated portion, e.g. 1 cup, 6 oz" },
+          calories: { type: "number" },
+          protein_g: { type: "number" },
+          carbs_g: { type: "number" },
+          fat_g: { type: "number" }
+        },
+        required: ["name", "portion", "calories", "protein_g", "carbs_g", "fat_g"],
+        additionalProperties: false
+      }
+    },
+    notes: { type: "string", description: "One short caveat about the estimate, or empty string" },
+    is_food: { type: "boolean", description: "False if the photo does not appear to contain food" }
+  },
+  required: ["meal_name", "items", "notes", "is_food"],
+  additionalProperties: false
+};
+
+async function analyzeMeal(base64Jpeg) {
+  const key = LS.get("mt_apiKey", "");
+  const resp = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-api-key": key,
+      "anthropic-version": "2023-06-01",
+      "anthropic-dangerous-direct-browser-access": "true"
+    },
+    body: JSON.stringify({
+      model: "claude-opus-4-8",
+      max_tokens: 6000,
+      thinking: { type: "adaptive" },
+      output_config: { format: { type: "json_schema", schema: MEAL_SCHEMA } },
+      messages: [{
+        role: "user",
+        content: [
+          { type: "image", source: { type: "base64", media_type: "image/jpeg", data: base64Jpeg } },
+          { type: "text", text: "Identify the food in this photo and estimate calories and macros for each item. Use visible plates, utensils, and containers for portion scale. Assume standard preparation unless the photo shows otherwise. If you are unsure between two portion sizes, pick the middle." }
+        ]
+      }]
+    })
+  });
+
+  if (!resp.ok) {
+    const body = await resp.json().catch(() => null);
+    const msg = body && body.error ? body.error.message : "";
+    const e = new Error(msg);
+    e.status = resp.status;
+    throw e;
+  }
+  const data = await resp.json();
+  const textBlock = data.content.find(b => b.type === "text");
+  if (!textBlock) throw new Error("No result came back. Try another photo.");
+  return JSON.parse(textBlock.text);
+}
+
+function friendlyError(err) {
+  if (err.status === 401) return "That API key was rejected. Check it in Settings.";
+  if (err.status === 429) return "Rate limited. Wait a minute and try again.";
+  if (err.status >= 500) return "Anthropic's servers hiccuped. Try again.";
+  if (err.message && err.message.includes("Failed to fetch")) return "No connection. Check your network and try again.";
+  return err.message || "Something went wrong. Try again.";
+}
+
+/* ---------- Confirm sheet ---------- */
+
+function showConfirm(result) {
+  if (!result.is_food || !result.items.length) {
+    $("main-status").textContent = "That photo does not look like food. Try again.";
+    return;
+  }
+  const tot = result.items.reduce((a, it) => ({
+    cal: a.cal + it.calories, pro: a.pro + it.protein_g, carb: a.carb + it.carbs_g, fat: a.fat + it.fat_g
+  }), { cal: 0, pro: 0, carb: 0, fat: 0 });
+
+  pendingMeal = {
+    name: result.meal_name,
+    cal: tot.cal, pro: tot.pro, carb: tot.carb, fat: tot.fat,
+    time: new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
+  };
+
+  $("confirm-items").innerHTML = result.items.map(it => `
+    <div class="item-row">
+      <div>${escapeHtml(it.name)}<div class="item-macros">${escapeHtml(it.portion)}</div></div>
+      <div style="text-align:right">${fmt(it.calories)} kcal
+        <div class="item-macros">P ${fmt(it.protein_g)} &middot; C ${fmt(it.carbs_g)} &middot; F ${fmt(it.fat_g)}</div>
+      </div>
+    </div>`).join("");
+  $("confirm-name").textContent = result.meal_name;
+  $("confirm-total").textContent = fmt(tot.cal) + " kcal";
+  $("confirm-notes").textContent = result.notes || "";
+  show("screen-confirm");
+}
+
+$("btn-add").onclick = () => {
+  if (pendingMeal) {
+    const list = getEntries();
+    list.push(pendingMeal);
+    setEntries(list);
+    pendingMeal = null;
+  }
+  renderMain();
+  show("screen-main");
+};
+$("btn-discard").onclick = () => { pendingMeal = null; show("screen-main"); };
+
+/* ---------- Boot ---------- */
+
+if (LS.get("mt_apiKey", "") && LS.get("mt_targets", null)) {
+  renderMain();
+  show("screen-main");
+} else {
+  openSetup(false);
+}
+
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden && $("screen-main").classList.contains("active")) renderMain();
+});
+</script>
+</body>
+</html>
