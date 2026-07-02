@@ -120,12 +120,17 @@ button.secondary {
 
 /* Forms */
 label.field { display: block; font-size: 13px; color: var(--text-secondary); margin: 12px 0 4px; }
-input, select {
+input, select, textarea {
   width: 100%; font-size: 16px; font-family: inherit;
   padding: 12px; border: 1px solid var(--border); border-radius: 10px;
   background: var(--surface-1); color: var(--text-primary);
   appearance: none; -webkit-appearance: none;
 }
+textarea { resize: vertical; line-height: 1.5; font-size: 15px; }
+
+/* Workout routines */
+.exlist { margin: 0; padding-left: 20px; }
+.exlist li { font-size: 14.5px; color: var(--text-primary); padding: 4px 0; }
 .row2 { display: flex; gap: 10px; }
 .row2 > div { flex: 1; }
 
@@ -238,7 +243,10 @@ input, select {
       <h1>Today</h1>
       <div class="datebadge" id="today-label"></div>
     </div>
-    <button class="iconbtn" id="btn-settings" aria-label="Settings">&#9881;</button>
+    <div>
+      <button class="iconbtn" id="btn-workouts" aria-label="Workouts">&#127947;&#65039;</button>
+      <button class="iconbtn" id="btn-settings" aria-label="Settings">&#9881;</button>
+    </div>
   </div>
 
   <div class="card" id="meters"></div>
@@ -265,6 +273,18 @@ input, select {
   </div>
   <button class="primary" id="btn-add">Add to today</button>
   <button class="secondary" id="btn-discard">Discard</button>
+</div>
+
+<!-- WORKOUTS -->
+<div class="screen" id="screen-workouts">
+  <div class="topbar">
+    <h1>Workouts</h1>
+    <button class="iconbtn" id="btn-workouts-close" aria-label="Close">&#10005;</button>
+  </div>
+  <p class="sub" id="workouts-hint">Your routines. Tap Edit to change exercises, weights, or reps. One exercise per line.</p>
+  <div id="routines"></div>
+  <button class="primary" id="btn-edit-workouts">Edit workouts</button>
+  <button class="secondary" id="btn-cancel-edit" style="display:none">Cancel</button>
 </div>
 
 <!-- ANALYZING -->
@@ -297,6 +317,36 @@ const WORKOUT_TYPES = [
   { id: "cardio", label: "Cardio" }
 ];
 const DEFAULT_BURNS = { push: 300, pull: 300, legs: 300, cardio: 400 };
+
+const DEFAULT_ROUTINES = {
+  push: [
+    "Flat Dumbbell Bench Press, 3 x 12 @ 50 lb",
+    "Seated Overhead Dumbbell Press, 3 x 12 @ 35 lb",
+    "Pec Fly Machine, 2 x 12 @ 140 lb, 1 x 12 @ 127.5 lb (30 lb dumbbells)",
+    "Cable Rope Triceps Pushdown, 3 x 12 @ 75 to 80 lb (25 lb skull crushers, 125 cable machine)",
+    "Dumbbell Lateral Raises, 3 x 12 @ 20 lb",
+    "Life goals check in"
+  ].join("\n"),
+  pull: [
+    "Romanian Deadlift (Smith Machine), 3 x 12 @ 70 lb + bar (45 lb dumbbells)",
+    "Lat Pulldown, 3 x 12 @ 140",
+    "Assisted Pull-Ups, 3 x 8 @ 45 lb assist (30 if first)",
+    "Seated Cable Row, 3 x 12 @ 100, smith or cable",
+    "Dumbbell Hammer Curls (DB or rope), 3 x 12 @ 25"
+  ].join("\n"),
+  legs: [
+    "Leg Press, 3 x 12 @ 280",
+    "Leg Extension Machine, 3 x 12 @ 130",
+    "Seated Leg Curl, 3 x 12 @ 100+",
+    "Dumbbell Step-Ups, 3 x 12 @ 30 lb",
+    "Calf Raises, 3 x 12 @ 35 lb (cable machine 200)"
+  ].join("\n"),
+  cardio: "Uphill walk, 3.5 mph at 12 to 14 percent incline"
+};
+
+function getRoutines() {
+  return Object.assign({}, DEFAULT_ROUTINES, LS.get("mt_routines", {}));
+}
 
 function getBurns() {
   return Object.assign({}, DEFAULT_BURNS, LS.get("mt_burns", {}));
@@ -408,6 +458,51 @@ $("btn-save").onclick = () => {
 
 $("btn-cancel-setup").onclick = () => show("screen-main");
 $("btn-settings").onclick = () => openSetup(true);
+
+/* ---------- Workouts screen ---------- */
+
+const ROUTINE_DAYS = [["push", "Push day"], ["pull", "Pull day"], ["legs", "Leg day"], ["cardio", "Cardio"]];
+let editingWorkouts = false;
+
+function renderWorkouts() {
+  const r = getRoutines();
+  $("routines").innerHTML = ROUTINE_DAYS.map(([id, label]) => {
+    if (editingWorkouts) {
+      const text = r[id] || "";
+      const rows = Math.max(3, text.split("\n").length + 1);
+      return `<div class="card"><h2 style="margin-top:0">${label}</h2>
+        <textarea data-day="${id}" rows="${rows}">${escapeHtml(text)}</textarea></div>`;
+    }
+    const lines = (r[id] || "").split("\n").filter(l => l.trim());
+    return `<div class="card"><h2 style="margin-top:0">${label}</h2>
+      <ol class="exlist">${lines.map(l => `<li>${escapeHtml(l)}</li>`).join("")}</ol></div>`;
+  }).join("");
+  $("btn-edit-workouts").textContent = editingWorkouts ? "Save workouts" : "Edit workouts";
+  $("btn-cancel-edit").style.display = editingWorkouts ? "block" : "none";
+  $("workouts-hint").textContent = editingWorkouts
+    ? "One exercise per line. Change anything, then tap Save."
+    : "Your routines. Tap Edit to change exercises, weights, or reps.";
+}
+
+$("btn-workouts").onclick = () => { editingWorkouts = false; renderWorkouts(); show("screen-workouts"); };
+$("btn-workouts-close").onclick = () => { editingWorkouts = false; show("screen-main"); };
+
+$("btn-edit-workouts").onclick = () => {
+  if (!editingWorkouts) {
+    editingWorkouts = true;
+    renderWorkouts();
+    return;
+  }
+  const saved = getRoutines();
+  $("routines").querySelectorAll("textarea").forEach(ta => {
+    saved[ta.dataset.day] = ta.value.trim();
+  });
+  LS.set("mt_routines", saved);
+  editingWorkouts = false;
+  renderWorkouts();
+};
+
+$("btn-cancel-edit").onclick = () => { editingWorkouts = false; renderWorkouts(); };
 
 /* ---------- Main rendering ---------- */
 
