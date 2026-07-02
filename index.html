@@ -244,6 +244,7 @@ textarea { resize: vertical; line-height: 1.5; font-size: 15px; }
       <div class="datebadge" id="today-label"></div>
     </div>
     <div>
+      <button class="iconbtn" id="btn-progress" aria-label="Progress">&#128200;</button>
       <button class="iconbtn" id="btn-workouts" aria-label="Workouts">&#127947;&#65039;</button>
       <button class="iconbtn" id="btn-settings" aria-label="Settings">&#9881;</button>
     </div>
@@ -254,7 +255,10 @@ textarea { resize: vertical; line-height: 1.5; font-size: 15px; }
   <div class="chips" id="workout-chips"></div>
 
   <button class="primary" id="btn-photo">&#128247;&nbsp; Snap a meal</button>
-  <button class="secondary" id="btn-saved" style="margin-top:-8px; margin-bottom:16px">Log a saved meal</button>
+  <div class="row2" style="margin-top:-8px; margin-bottom:16px">
+    <div><button class="secondary" id="btn-saved" style="margin-top:0">Saved meals</button></div>
+    <div><button class="secondary" id="btn-quick" style="margin-top:0">Quick add</button></div>
+  </div>
   <input type="file" id="file-input" accept="image/*" capture="environment" style="display:none">
 
   <h2>Meals</h2>
@@ -272,8 +276,62 @@ textarea { resize: vertical; line-height: 1.5; font-size: 15px; }
     <div class="totals"><span id="confirm-name">Meal</span><span id="confirm-total"></span></div>
     <p class="notes" id="confirm-notes"></p>
   </div>
+  <label class="field" style="margin-top:16px">Portion size</label>
+  <div class="chips" id="portion-chips" style="margin-top:4px">
+    <button class="chip" data-m="0.5">&#189;x</button>
+    <button class="chip on" data-m="1">1x</button>
+    <button class="chip" data-m="1.5">1&#189;x</button>
+    <button class="chip" data-m="2">2x</button>
+  </div>
   <button class="primary" id="btn-add">Add to today</button>
   <button class="secondary" id="btn-discard">Discard</button>
+</div>
+
+<!-- QUICK ADD -->
+<div class="screen" id="screen-quickadd">
+  <div class="topbar">
+    <h1>Quick add</h1>
+    <button class="iconbtn" id="btn-quick-close" aria-label="Close">&#10005;</button>
+  </div>
+  <p class="sub">For foods you know from the label. No photo, no connection needed. It saves to your library too.</p>
+  <div class="card">
+    <label class="field" style="margin-top:0">Name</label>
+    <input type="text" id="q-name" placeholder="Protein shake, 2 scoops" autocomplete="off">
+    <div class="row2">
+      <div><label class="field">Calories</label><input type="number" id="q-cal" inputmode="numeric"></div>
+      <div><label class="field">Protein (g)</label><input type="number" id="q-pro" inputmode="numeric"></div>
+    </div>
+    <div class="row2">
+      <div><label class="field">Carbs (g)</label><input type="number" id="q-carb" inputmode="numeric"></div>
+      <div><label class="field">Fat (g)</label><input type="number" id="q-fat" inputmode="numeric"></div>
+    </div>
+  </div>
+  <button class="primary" id="btn-quick-add">Add to today</button>
+  <div class="status err" id="quick-status"></div>
+</div>
+
+<!-- PROGRESS -->
+<div class="screen" id="screen-progress">
+  <div class="topbar">
+    <h1>Progress</h1>
+    <button class="iconbtn" id="btn-progress-close" aria-label="Close">&#10005;</button>
+  </div>
+
+  <div class="card">
+    <h2 style="margin-top:0">Weight</h2>
+    <div class="row2">
+      <div><input type="number" step="0.1" id="w-input" inputmode="decimal" placeholder="205.0"></div>
+      <div><button class="primary" id="btn-log-weight" style="margin:0; padding:12px">Log weight</button></div>
+    </div>
+    <p class="sub" id="w-summary" style="margin:12px 0 0"></p>
+    <p class="sub" id="w-guidance" style="margin:6px 0 0"></p>
+    <div id="w-recent"></div>
+  </div>
+
+  <div class="card">
+    <h2 style="margin-top:0">Last 7 days</h2>
+    <div id="week-list"></div>
+  </div>
 </div>
 
 <!-- SAVED MEALS -->
@@ -315,12 +373,9 @@ const LS = {
   set(k, v) { localStorage.setItem(k, JSON.stringify(v)); }
 };
 
-const todayKey = () => {
-  const d = new Date();
-  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
-};
-
-let pendingMeal = null;
+const dateKey = (d) =>
+  d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+const todayKey = () => dateKey(new Date());
 
 const WORKOUT_TYPES = [
   { id: "push", label: "Push" },
@@ -412,15 +467,11 @@ function renderFoods() {
     row.onclick = () => {
       const f = (getFoods() || {})[row.dataset.k];
       if (!f) return;
-      const list = getEntries();
-      list.push({
-        name: f.name, cal: f.cal, pro: f.pro, carb: f.carb, fat: f.fat,
-        time: new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
+      openConfirm({
+        name: f.name,
+        items: [{ name: f.name, portion: "saved estimate", calories: f.cal, protein_g: f.pro, carbs_g: f.carb, fat_g: f.fat }],
+        notes: ""
       });
-      setEntries(list);
-      saveFood(f);
-      renderMain();
-      show("screen-main");
     };
   });
   $("foods-list").querySelectorAll(".entry-del").forEach(btn => {
@@ -437,6 +488,157 @@ function renderFoods() {
 $("btn-saved").onclick = () => { $("food-search").value = ""; renderFoods(); show("screen-foods"); };
 $("btn-foods-close").onclick = () => show("screen-main");
 $("food-search").oninput = () => renderFoods();
+
+/* ---------- Quick add ---------- */
+
+$("btn-quick").onclick = () => {
+  ["q-name", "q-cal", "q-pro", "q-carb", "q-fat"].forEach(id => $(id).value = "");
+  $("quick-status").textContent = "";
+  show("screen-quickadd");
+};
+$("btn-quick-close").onclick = () => show("screen-main");
+
+$("btn-quick-add").onclick = () => {
+  const name = $("q-name").value.trim();
+  const cal = +$("q-cal").value;
+  if (!name || !cal) { $("quick-status").textContent = "A name and calories are the minimum."; return; }
+  const meal = { name, cal, pro: +$("q-pro").value || 0, carb: +$("q-carb").value || 0, fat: +$("q-fat").value || 0 };
+  const list = getEntries();
+  list.push(Object.assign({}, meal, {
+    time: new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
+  }));
+  setEntries(list);
+  saveFood(meal);
+  renderMain();
+  show("screen-main");
+};
+
+/* ---------- Progress: weight and week view ---------- */
+
+function getWeights() { return LS.get("mt_weights", {}); }
+
+function weightStats() {
+  const w = getWeights();
+  const dates = Object.keys(w).sort();
+  if (!dates.length) return { count: 0 };
+  const now = new Date(todayKey() + "T12:00:00");
+  const daysAgo = (d) => Math.round((now - new Date(d + "T12:00:00")) / 86400000);
+
+  const last7 = dates.filter(d => daysAgo(d) <= 6).map(d => w[d]);
+  const avg7 = last7.length ? last7.reduce((a, b) => a + b, 0) / last7.length : null;
+
+  const pts = dates.filter(d => daysAgo(d) <= 13).map(d => ({ x: -daysAgo(d), y: w[d] }));
+  let rate = null;
+  if (pts.length >= 4) {
+    const span = Math.max(...pts.map(p => p.x)) - Math.min(...pts.map(p => p.x));
+    if (span >= 7) {
+      const n = pts.length;
+      const mx = pts.reduce((a, p) => a + p.x, 0) / n;
+      const my = pts.reduce((a, p) => a + p.y, 0) / n;
+      const num = pts.reduce((a, p) => a + (p.x - mx) * (p.y - my), 0);
+      const den = pts.reduce((a, p) => a + (p.x - mx) * (p.x - mx), 0);
+      if (den > 0) rate = (num / den) * 7;
+    }
+  }
+  return { count: dates.length, dates, weights: w, avg7, rate };
+}
+
+function trendGuidance(rate) {
+  if (rate === null || rate === undefined) {
+    return "Log your weight a few times a week. Trend guidance appears after about two weeks of entries.";
+  }
+  const p = LS.get("mt_profile", null);
+  const goal = p ? p.goal : 0;
+  if (goal > 0) {
+    if (rate > 0.6) return "Faster than the half pound a week sweet spot, which usually means extra fat. Consider trimming about 200 calories from your target.";
+    if (rate >= 0.15) return "On track. A quarter to half a pound a week is the sweet spot for lean gain.";
+    return "Weight is flat. Consider adding about 150 calories to your target.";
+  }
+  if (goal < 0) {
+    if (rate < -1.2) return "Losing faster than about a pound a week risks muscle. Consider adding about 200 calories.";
+    if (rate <= -0.3) return "On track. Half a pound to a pound a week is a sustainable pace.";
+    return "Weight is holding. Consider trimming about 200 calories from your target.";
+  }
+  if (Math.abs(rate) <= 0.25) return "Holding steady. Targets look right.";
+  return rate > 0
+    ? "Drifting up. Consider trimming about 150 calories."
+    : "Drifting down. Consider adding about 150 calories.";
+}
+
+function renderProgress() {
+  const s = weightStats();
+  if (s.count === 0) {
+    $("w-summary").textContent = "No weigh-ins yet.";
+    $("w-guidance").textContent = trendGuidance(null);
+    $("w-recent").innerHTML = "";
+  } else {
+    const parts = [];
+    if (s.avg7 !== null) parts.push("7 day average " + s.avg7.toFixed(1) + " lb");
+    if (s.rate !== null) {
+      const r = s.rate;
+      parts.push("trend " + (r >= 0 ? "+" : "") + r.toFixed(1) + " lb per week");
+    }
+    $("w-summary").textContent = parts.join(", ") || "Logged " + s.count + " weigh-in" + (s.count > 1 ? "s" : "") + ".";
+    $("w-guidance").textContent = trendGuidance(s.rate);
+    const recent = s.dates.slice(-5).reverse();
+    $("w-recent").innerHTML = recent.map(d => `
+      <div class="entry">
+        <div>
+          <div class="entry-name">${s.weights[d].toFixed(1)} lb</div>
+          <div class="entry-detail">${new Date(d + "T12:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}</div>
+        </div>
+        <button class="entry-del" data-d="${d}" aria-label="Delete">&#10005;</button>
+      </div>`).join("");
+    $("w-recent").querySelectorAll(".entry-del").forEach(btn => {
+      btn.onclick = () => {
+        const w = getWeights();
+        delete w[btn.dataset.d];
+        LS.set("mt_weights", w);
+        renderProgress();
+      };
+    });
+  }
+
+  const t = LS.get("mt_targets", { cal: 2000, pro: 150 });
+  const burns = getBurns();
+  const allE = LS.get("mt_entries", {});
+  const allW = LS.get("mt_workouts", {});
+  const rows = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const k = dateKey(d);
+    const entries = allE[k] || [];
+    const sum = entries.reduce((a, e) => ({ cal: a.cal + e.cal, pro: a.pro + e.pro }), { cal: 0, pro: 0 });
+    const extra = (allW[k] || []).reduce((a, id) => a + (burns[id] || 0), 0);
+    const tgt = t.cal + extra;
+    const label = i === 0 ? "Today" : d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+    const hit = entries.length > 0 && sum.cal >= tgt * 0.9 && sum.cal <= tgt * 1.1;
+    rows.push(`
+      <div class="entry">
+        <div>
+          <div class="entry-name">${label} ${hit ? "&#10003;" : ""}</div>
+          <div class="entry-detail">${entries.length ? fmt(sum.cal) + " / " + fmt(tgt) + " kcal &middot; P " + fmt(sum.pro) + " / " + fmt(t.pro) : "Nothing logged"}</div>
+        </div>
+      </div>`);
+  }
+  $("week-list").innerHTML = rows.join("");
+}
+
+$("btn-progress").onclick = () => { $("w-input").value = ""; renderProgress(); show("screen-progress"); };
+$("btn-progress-close").onclick = () => show("screen-main");
+
+$("btn-log-weight").onclick = () => {
+  const val = +$("w-input").value;
+  if (!val || val < 50 || val > 700) return;
+  const w = getWeights();
+  w[todayKey()] = val;
+  const keys = Object.keys(w).sort();
+  while (keys.length > 90) delete w[keys.shift()];
+  LS.set("mt_weights", w);
+  $("w-input").value = "";
+  renderProgress();
+};
 
 function getBurns() {
   return Object.assign({}, DEFAULT_BURNS, LS.get("mt_burns", {}));
@@ -791,46 +993,74 @@ function friendlyError(err) {
 
 /* ---------- Confirm sheet ---------- */
 
+let confirmBase = null;
+let confirmMult = 1;
+
+function itemTotals(items) {
+  return items.reduce((a, it) => ({
+    cal: a.cal + it.calories, pro: a.pro + it.protein_g, carb: a.carb + it.carbs_g, fat: a.fat + it.fat_g
+  }), { cal: 0, pro: 0, carb: 0, fat: 0 });
+}
+
+function multLabel(m) {
+  return { "0.5": "½x", "1.5": "1½x", "2": "2x" }[String(m)] || "";
+}
+
 function showConfirm(result) {
   if (!result.is_food || !result.items.length) {
     $("main-status").textContent = "That photo does not look like food. Try again.";
     return;
   }
-  const tot = result.items.reduce((a, it) => ({
-    cal: a.cal + it.calories, pro: a.pro + it.protein_g, carb: a.carb + it.carbs_g, fat: a.fat + it.fat_g
-  }), { cal: 0, pro: 0, carb: 0, fat: 0 });
+  openConfirm({ name: result.meal_name, items: result.items, notes: result.notes || "" });
+}
 
-  pendingMeal = {
-    name: result.meal_name,
-    cal: tot.cal, pro: tot.pro, carb: tot.carb, fat: tot.fat,
-    time: new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
-  };
-
-  $("confirm-items").innerHTML = result.items.map(it => `
-    <div class="item-row">
-      <div>${escapeHtml(it.name)}<div class="item-macros">${escapeHtml(it.portion)}</div></div>
-      <div style="text-align:right">${fmt(it.calories)} kcal
-        <div class="item-macros">P ${fmt(it.protein_g)} &middot; C ${fmt(it.carbs_g)} &middot; F ${fmt(it.fat_g)}</div>
-      </div>
-    </div>`).join("");
-  $("confirm-name").textContent = result.meal_name;
-  $("confirm-total").textContent = fmt(tot.cal) + " kcal";
-  $("confirm-notes").textContent = result.notes || "";
+function openConfirm(base) {
+  confirmBase = base;
+  confirmMult = 1;
+  renderConfirm();
   show("screen-confirm");
 }
 
+function renderConfirm() {
+  const m = confirmMult;
+  const tot = itemTotals(confirmBase.items);
+  $("confirm-items").innerHTML = confirmBase.items.map(it => `
+    <div class="item-row">
+      <div>${escapeHtml(it.name)}<div class="item-macros">${escapeHtml(it.portion)}</div></div>
+      <div style="text-align:right">${fmt(it.calories * m)} kcal
+        <div class="item-macros">P ${fmt(it.protein_g * m)} &middot; C ${fmt(it.carbs_g * m)} &middot; F ${fmt(it.fat_g * m)}</div>
+      </div>
+    </div>`).join("");
+  $("confirm-name").textContent = confirmBase.name;
+  $("confirm-total").textContent = fmt(tot.cal * m) + " kcal";
+  $("confirm-notes").textContent = confirmBase.notes || "";
+  $("portion-chips").querySelectorAll(".chip").forEach(b => {
+    b.classList.toggle("on", +b.dataset.m === m);
+  });
+}
+
+$("portion-chips").querySelectorAll(".chip").forEach(b => {
+  b.onclick = () => { confirmMult = +b.dataset.m; renderConfirm(); };
+});
+
 $("btn-add").onclick = () => {
-  if (pendingMeal) {
+  if (confirmBase) {
+    const m = confirmMult;
+    const tot = itemTotals(confirmBase.items);
     const list = getEntries();
-    list.push(pendingMeal);
+    list.push({
+      name: confirmBase.name + (m !== 1 ? " (" + multLabel(m) + ")" : ""),
+      cal: tot.cal * m, pro: tot.pro * m, carb: tot.carb * m, fat: tot.fat * m,
+      time: new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
+    });
     setEntries(list);
-    saveFood(pendingMeal);
-    pendingMeal = null;
+    saveFood({ name: confirmBase.name, cal: tot.cal, pro: tot.pro, carb: tot.carb, fat: tot.fat });
+    confirmBase = null;
   }
   renderMain();
   show("screen-main");
 };
-$("btn-discard").onclick = () => { pendingMeal = null; show("screen-main"); };
+$("btn-discard").onclick = () => { confirmBase = null; show("screen-main"); };
 
 /* ---------- Boot ---------- */
 
