@@ -147,8 +147,10 @@ textarea { resize: vertical; line-height: 1.5; font-size: 15px; }
 #preview-img { max-width: 200px; max-height: 200px; border-radius: 12px; object-fit: cover; }
 
 /* Confirm sheet */
-.item-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--hairline); font-size: 15px; }
+.item-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--hairline); font-size: 15px; cursor: pointer; }
 .item-row:last-child { border-bottom: none; }
+.item-row.off { opacity: 0.4; }
+.item-row.off .item-name { text-decoration: line-through; }
 .item-macros { color: var(--text-muted); font-size: 13px; font-variant-numeric: tabular-nums; }
 .totals { display: flex; justify-content: space-between; padding-top: 12px; margin-top: 4px; border-top: 1px solid var(--hairline); font-weight: 600; }
 .notes { font-size: 13px; color: var(--text-muted); margin-top: 10px; }
@@ -270,7 +272,7 @@ textarea { resize: vertical; line-height: 1.5; font-size: 15px; }
 <!-- CONFIRM -->
 <div class="screen" id="screen-confirm">
   <h1>Looks like...</h1>
-  <p class="sub">Estimates from the photo. Add it to your day or discard it.</p>
+  <p class="sub" id="confirm-sub">Add it to your day or discard it.</p>
   <div class="card">
     <div id="confirm-items"></div>
     <div class="totals"><span id="confirm-name">Meal</span><span id="confirm-total"></span></div>
@@ -427,6 +429,7 @@ function saveFood(meal) {
   foods[k] = {
     name: meal.name,
     cal: meal.cal, pro: meal.pro, carb: meal.carb, fat: meal.fat,
+    items: meal.items || (prev ? prev.items : undefined),
     count: (prev ? prev.count : 0) + 1,
     last: Date.now()
   };
@@ -434,7 +437,16 @@ function saveFood(meal) {
 }
 
 const SEED_FOODS = [
-  { name: "Protein shake", cal: 545, pro: 39, carb: 61, fat: 18 }
+  {
+    name: "Protein shake", cal: 545, pro: 39, carb: 61, fat: 18,
+    items: [
+      { name: "Frozen fruit", portion: "about 1 cup", calories: 70, protein_g: 1, carbs_g: 17, fat_g: 0 },
+      { name: "Banana", portion: "1 medium", calories: 105, protein_g: 1, carbs_g: 27, fat_g: 0 },
+      { name: "Kirkland whey protein", portion: "1 scoop", calories: 130, protein_g: 25, carbs_g: 3, fat_g: 2 },
+      { name: "Peanut butter", portion: "heaping spoonful", calories: 140, protein_g: 5, carbs_g: 6, fat_g: 12 },
+      { name: "Soy milk", portion: "about 1 cup", calories: 100, protein_g: 7, carbs_g: 8, fat_g: 4 }
+    ]
+  }
 ];
 
 function seedFoods() {
@@ -443,7 +455,10 @@ function seedFoods() {
   SEED_FOODS.forEach(f => {
     const k = f.name.trim().toLowerCase();
     if (!foods[k]) {
-      foods[k] = { name: f.name, cal: f.cal, pro: f.pro, carb: f.carb, fat: f.fat, count: 0, last: 0 };
+      foods[k] = { name: f.name, cal: f.cal, pro: f.pro, carb: f.carb, fat: f.fat, items: f.items, count: 0, last: 0 };
+      changed = true;
+    } else if (!foods[k].items && f.items) {
+      foods[k].items = f.items;
       changed = true;
     }
   });
@@ -487,7 +502,9 @@ function renderFoods() {
       if (!f) return;
       openConfirm({
         name: f.name,
-        items: [{ name: f.name, portion: "saved estimate", calories: f.cal, protein_g: f.pro, carbs_g: f.carb, fat_g: f.fat }],
+        items: f.items && f.items.length
+          ? f.items
+          : [{ name: f.name, portion: "saved estimate", calories: f.cal, protein_g: f.pro, carbs_g: f.carb, fat_g: f.fat }],
         notes: ""
       });
     };
@@ -521,6 +538,7 @@ $("btn-quick-add").onclick = () => {
   const cal = +$("q-cal").value;
   if (!name || !cal) { $("quick-status").textContent = "A name and calories are the minimum."; return; }
   const meal = { name, cal, pro: +$("q-pro").value || 0, carb: +$("q-carb").value || 0, fat: +$("q-fat").value || 0 };
+  meal.items = [{ name, portion: "as entered", calories: meal.cal, protein_g: meal.pro, carbs_g: meal.carb, fat_g: meal.fat }];
   const list = getEntries();
   list.push(Object.assign({}, meal, {
     time: new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
@@ -1013,11 +1031,16 @@ function friendlyError(err) {
 
 let confirmBase = null;
 let confirmMult = 1;
+let confirmExcluded = new Set();
 
 function itemTotals(items) {
   return items.reduce((a, it) => ({
     cal: a.cal + it.calories, pro: a.pro + it.protein_g, carb: a.carb + it.carbs_g, fat: a.fat + it.fat_g
   }), { cal: 0, pro: 0, carb: 0, fat: 0 });
+}
+
+function includedItems() {
+  return confirmBase.items.filter((_, i) => !confirmExcluded.has(i));
 }
 
 function multLabel(m) {
@@ -1035,20 +1058,32 @@ function showConfirm(result) {
 function openConfirm(base) {
   confirmBase = base;
   confirmMult = 1;
+  confirmExcluded = new Set();
   renderConfirm();
   show("screen-confirm");
 }
 
 function renderConfirm() {
   const m = confirmMult;
-  const tot = itemTotals(confirmBase.items);
-  $("confirm-items").innerHTML = confirmBase.items.map(it => `
-    <div class="item-row">
-      <div>${escapeHtml(it.name)}<div class="item-macros">${escapeHtml(it.portion)}</div></div>
+  const tot = itemTotals(includedItems());
+  $("confirm-sub").textContent = confirmBase.items.length > 1
+    ? "Tap an ingredient to leave it out. Add it to your day or discard it."
+    : "Add it to your day or discard it.";
+  $("confirm-items").innerHTML = confirmBase.items.map((it, i) => `
+    <div class="item-row${confirmExcluded.has(i) ? " off" : ""}" data-i="${i}">
+      <div><span class="item-name">${escapeHtml(it.name)}</span><div class="item-macros">${escapeHtml(it.portion)}</div></div>
       <div style="text-align:right">${fmt(it.calories * m)} kcal
         <div class="item-macros">P ${fmt(it.protein_g * m)} &middot; C ${fmt(it.carbs_g * m)} &middot; F ${fmt(it.fat_g * m)}</div>
       </div>
     </div>`).join("");
+  $("confirm-items").querySelectorAll(".item-row").forEach(row => {
+    row.onclick = () => {
+      if (confirmBase.items.length < 2) return;
+      const i = +row.dataset.i;
+      if (confirmExcluded.has(i)) confirmExcluded.delete(i); else confirmExcluded.add(i);
+      renderConfirm();
+    };
+  });
   $("confirm-name").textContent = confirmBase.name;
   $("confirm-total").textContent = fmt(tot.cal * m) + " kcal";
   $("confirm-notes").textContent = confirmBase.notes || "";
@@ -1063,8 +1098,11 @@ $("portion-chips").querySelectorAll(".chip").forEach(b => {
 
 $("btn-add").onclick = () => {
   if (confirmBase) {
+    const included = includedItems();
+    if (!included.length) return;
     const m = confirmMult;
-    const tot = itemTotals(confirmBase.items);
+    const tot = itemTotals(included);
+    const full = itemTotals(confirmBase.items);
     const list = getEntries();
     list.push({
       name: confirmBase.name + (m !== 1 ? " (" + multLabel(m) + ")" : ""),
@@ -1072,7 +1110,11 @@ $("btn-add").onclick = () => {
       time: new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
     });
     setEntries(list);
-    saveFood({ name: confirmBase.name, cal: tot.cal, pro: tot.pro, carb: tot.carb, fat: tot.fat });
+    saveFood({
+      name: confirmBase.name,
+      cal: full.cal, pro: full.pro, carb: full.carb, fat: full.fat,
+      items: confirmBase.items
+    });
     confirmBase = null;
   }
   renderMain();
