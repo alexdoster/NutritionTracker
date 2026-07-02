@@ -282,6 +282,7 @@ textarea { resize: vertical; line-height: 1.5; font-size: 15px; }
     <button class="chip on" data-m="1">1x</button>
     <button class="chip" data-m="1.5">1&#189;x</button>
     <button class="chip" data-m="2">2x</button>
+    <button class="chip" data-m="3">3x</button>
   </div>
   <button class="primary" id="btn-add">Add to today</button>
   <button class="secondary" id="btn-discard">Discard</button>
@@ -964,7 +965,7 @@ async function analyzeMeal(base64Jpeg) {
         role: "user",
         content: [
           { type: "image", source: { type: "base64", media_type: "image/jpeg", data: base64Jpeg } },
-          { type: "text", text: "Identify the food in this photo and estimate calories and macros for each item. Use visible plates, utensils, and containers for portion scale. Assume standard preparation unless the photo shows otherwise. If you are unsure between two portion sizes, pick the middle." }
+          { type: "text", text: "If this photo shows a nutrition facts label, do not estimate. Transcribe the label's per serving values exactly as one item, use the product name from the packaging as the item and meal name, and put the stated serving size in the portion field. Otherwise, identify the food in the photo and estimate calories and macros for each item. Use visible plates, utensils, and containers for portion scale. Assume standard preparation unless the photo shows otherwise. If you are unsure between two portion sizes, pick the middle." }
         ]
       }]
     })
@@ -1003,7 +1004,7 @@ function itemTotals(items) {
 }
 
 function multLabel(m) {
-  return { "0.5": "½x", "1.5": "1½x", "2": "2x" }[String(m)] || "";
+  return { "0.5": "½x", "1.5": "1½x", "2": "2x", "3": "3x" }[String(m)] || "";
 }
 
 function showConfirm(result) {
