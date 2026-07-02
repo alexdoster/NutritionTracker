@@ -753,6 +753,10 @@ if (LS.get("mt_apiKey", "") && LS.get("mt_targets", null)) {
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden && $("screen-main").classList.contains("active")) renderMain();
 });
+
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("./sw.js");
+}
 </script>
 </body>
 </html>
