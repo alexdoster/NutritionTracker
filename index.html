@@ -76,6 +76,16 @@ h2 { font-size: 16px; font-weight: 600; margin: 20px 0 8px; }
 .meter-fill { height: 100%; border-radius: 5px; background: var(--accent); width: 0%; transition: width 0.4s ease; }
 .stat-over { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
 
+/* Workout chips */
+.chips { display: flex; gap: 8px; margin-top: 12px; }
+.chip {
+  flex: 1; padding: 10px 0; border-radius: 20px;
+  border: 1px solid var(--border); background: var(--surface-1);
+  color: var(--text-secondary); font-size: 14px; font-weight: 500;
+  font-family: inherit; cursor: pointer;
+}
+.chip.on { background: var(--accent); border-color: var(--accent); color: #ffffff; }
+
 .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
 .datebadge { font-size: 13px; color: var(--text-muted); }
 .iconbtn {
@@ -204,6 +214,16 @@ input, select {
       <div><label class="field">Carbs (g)</label><input type="number" id="t-carb" inputmode="numeric"></div>
       <div><label class="field">Fat (g)</label><input type="number" id="t-fat" inputmode="numeric"></div>
     </div>
+    <h2>Workout calories</h2>
+    <p class="sub" style="margin-bottom:0">Tapping a workout button on the Today screen adds these calories to that day's target. Set your activity level above to Sedentary so workouts are not counted twice.</p>
+    <div class="row2">
+      <div><label class="field">Push day</label><input type="number" id="b-push" inputmode="numeric"></div>
+      <div><label class="field">Pull day</label><input type="number" id="b-pull" inputmode="numeric"></div>
+    </div>
+    <div class="row2">
+      <div><label class="field">Leg day</label><input type="number" id="b-legs" inputmode="numeric"></div>
+      <div><label class="field">Cardio</label><input type="number" id="b-cardio" inputmode="numeric"></div>
+    </div>
     <button class="primary" id="btn-save" style="margin-bottom:0">Save and start</button>
   </div>
 
@@ -222,6 +242,8 @@ input, select {
   </div>
 
   <div class="card" id="meters"></div>
+
+  <div class="chips" id="workout-chips"></div>
 
   <button class="primary" id="btn-photo">&#128247;&nbsp; Snap a meal</button>
   <input type="file" id="file-input" accept="image/*" capture="environment" style="display:none">
@@ -268,6 +290,32 @@ const todayKey = () => {
 
 let pendingMeal = null;
 
+const WORKOUT_TYPES = [
+  { id: "push", label: "Push" },
+  { id: "pull", label: "Pull" },
+  { id: "legs", label: "Legs" },
+  { id: "cardio", label: "Cardio" }
+];
+const DEFAULT_BURNS = { push: 300, pull: 300, legs: 300, cardio: 400 };
+
+function getBurns() {
+  return Object.assign({}, DEFAULT_BURNS, LS.get("mt_burns", {}));
+}
+function getTodayWorkouts() {
+  const all = LS.get("mt_workouts", {});
+  return all[todayKey()] || [];
+}
+function toggleWorkout(id) {
+  const all = LS.get("mt_workouts", {});
+  const list = all[todayKey()] || [];
+  const i = list.indexOf(id);
+  if (i >= 0) list.splice(i, 1); else list.push(id);
+  all[todayKey()] = list;
+  const keys = Object.keys(all).sort();
+  while (keys.length > 30) delete all[keys.shift()];
+  LS.set("mt_workouts", all);
+}
+
 /* ---------- Targets ---------- */
 
 function calcTargets(p) {
@@ -308,6 +356,9 @@ function openSetup(isEdit) {
   } else {
     $("targets-card").style.display = "none";
   }
+  const b = getBurns();
+  $("b-push").value = b.push; $("b-pull").value = b.pull;
+  $("b-legs").value = b.legs; $("b-cardio").value = b.cardio;
   $("setup-status").textContent = "";
   show("screen-setup");
 }
@@ -345,6 +396,12 @@ $("btn-save").onclick = () => {
   LS.set("mt_apiKey", key);
   LS.set("mt_profile", p);
   LS.set("mt_targets", t);
+  LS.set("mt_burns", {
+    push: +$("b-push").value || DEFAULT_BURNS.push,
+    pull: +$("b-pull").value || DEFAULT_BURNS.pull,
+    legs: +$("b-legs").value || DEFAULT_BURNS.legs,
+    cardio: +$("b-cardio").value || DEFAULT_BURNS.cardio
+  });
   renderMain();
   show("screen-main");
 };
@@ -377,24 +434,36 @@ function renderMain() {
 
   $("today-label").textContent = new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
 
+  const burns = getBurns();
+  const doneToday = getTodayWorkouts();
+  const extraCal = doneToday.reduce((a, id) => a + (burns[id] || 0), 0);
+
   const rows = [
-    { label: "Calories", cur: sum.cal, tgt: t.cal, unit: "kcal" },
+    { label: "Calories", cur: sum.cal, tgt: t.cal + extraCal, unit: "kcal", note: extraCal > 0 ? `Workouts add ${fmt(extraCal)} kcal to today's target` : "" },
     { label: "Protein", cur: sum.pro, tgt: t.pro, unit: "g" },
     { label: "Carbs", cur: sum.carb, tgt: t.carb, unit: "g" },
     { label: "Fat", cur: sum.fat, tgt: t.fat, unit: "g" }
   ];
   $("meters").innerHTML = rows.map(r => {
     const pct = r.tgt > 0 ? Math.min(100, r.cur / r.tgt * 100) : 0;
-    const over = r.cur > r.tgt ? `<div class="stat-over">${fmt(r.cur - r.tgt)} ${r.unit} over target</div>` : "";
+    let note = r.note || "";
+    if (r.cur > r.tgt) note = `${fmt(r.cur - r.tgt)} ${r.unit} over target`;
     return `<div class="stat">
       <div class="stat-head">
         <span class="stat-label">${r.label}</span>
         <span class="stat-val"><b>${fmt(r.cur)}</b> / ${fmt(r.tgt)} ${r.unit}</span>
       </div>
       <div class="meter"><div class="meter-fill" style="width:${pct}%"></div></div>
-      ${over}
+      ${note ? `<div class="stat-over">${note}</div>` : ""}
     </div>`;
   }).join("");
+
+  $("workout-chips").innerHTML = WORKOUT_TYPES.map(w =>
+    `<button class="chip${doneToday.includes(w.id) ? " on" : ""}" data-w="${w.id}">${w.label}</button>`
+  ).join("");
+  $("workout-chips").querySelectorAll(".chip").forEach(btn => {
+    btn.onclick = () => { toggleWorkout(btn.dataset.w); renderMain(); };
+  });
 
   if (entries.length === 0) {
     $("entries").innerHTML = `<div class="empty">Nothing logged yet. Snap your first meal.</div>`;
