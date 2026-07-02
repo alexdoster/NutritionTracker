@@ -254,6 +254,7 @@ textarea { resize: vertical; line-height: 1.5; font-size: 15px; }
   <div class="chips" id="workout-chips"></div>
 
   <button class="primary" id="btn-photo">&#128247;&nbsp; Snap a meal</button>
+  <button class="secondary" id="btn-saved" style="margin-top:-8px; margin-bottom:16px">Log a saved meal</button>
   <input type="file" id="file-input" accept="image/*" capture="environment" style="display:none">
 
   <h2>Meals</h2>
@@ -273,6 +274,17 @@ textarea { resize: vertical; line-height: 1.5; font-size: 15px; }
   </div>
   <button class="primary" id="btn-add">Add to today</button>
   <button class="secondary" id="btn-discard">Discard</button>
+</div>
+
+<!-- SAVED MEALS -->
+<div class="screen" id="screen-foods">
+  <div class="topbar">
+    <h1>Saved meals</h1>
+    <button class="iconbtn" id="btn-foods-close" aria-label="Close">&#10005;</button>
+  </div>
+  <p class="sub">Every meal you add from a photo is saved here. Tap one to log it again. No connection needed.</p>
+  <input type="search" id="food-search" placeholder="Search" autocomplete="off">
+  <div class="card" id="foods-list" style="margin-top:12px"></div>
 </div>
 
 <!-- WORKOUTS -->
@@ -347,6 +359,84 @@ const DEFAULT_ROUTINES = {
 function getRoutines() {
   return Object.assign({}, DEFAULT_ROUTINES, LS.get("mt_routines", {}));
 }
+
+/* ---------- Saved meals library ---------- */
+
+function getFoods() { return LS.get("mt_foods", null); }
+
+function saveFood(meal) {
+  const foods = getFoods() || {};
+  const k = meal.name.trim().toLowerCase();
+  const prev = foods[k];
+  foods[k] = {
+    name: meal.name,
+    cal: meal.cal, pro: meal.pro, carb: meal.carb, fat: meal.fat,
+    count: (prev ? prev.count : 0) + 1,
+    last: Date.now()
+  };
+  LS.set("mt_foods", foods);
+}
+
+function migrateFoods() {
+  if (getFoods() !== null) return;
+  const foods = {};
+  const all = LS.get("mt_entries", {});
+  Object.values(all).forEach(day => day.forEach(e => {
+    const k = e.name.trim().toLowerCase();
+    if (!foods[k]) foods[k] = { name: e.name, cal: e.cal, pro: e.pro, carb: e.carb, fat: e.fat, count: 0, last: 0 };
+    foods[k].count += 1;
+  }));
+  LS.set("mt_foods", foods);
+}
+
+function renderFoods() {
+  const q = $("food-search").value.trim().toLowerCase();
+  const foods = Object.entries(getFoods() || {})
+    .filter(([k]) => !q || k.includes(q))
+    .sort((a, b) => (b[1].count - a[1].count) || (b[1].last - a[1].last));
+
+  if (foods.length === 0) {
+    $("foods-list").innerHTML = `<div class="empty">${q ? "No match." : "Nothing saved yet. Meals you add from photos will appear here automatically."}</div>`;
+    return;
+  }
+  $("foods-list").innerHTML = foods.map(([k, f]) => `
+    <div class="entry" data-k="${escapeHtml(k)}" style="cursor:pointer">
+      <div>
+        <div class="entry-name">${escapeHtml(f.name)}</div>
+        <div class="entry-detail">${fmt(f.cal)} kcal &middot; P ${fmt(f.pro)} &middot; C ${fmt(f.carb)} &middot; F ${fmt(f.fat)} &middot; logged ${f.count}x</div>
+      </div>
+      <button class="entry-del" data-k="${escapeHtml(k)}" aria-label="Remove">&#10005;</button>
+    </div>`).join("");
+
+  $("foods-list").querySelectorAll(".entry").forEach(row => {
+    row.onclick = () => {
+      const f = (getFoods() || {})[row.dataset.k];
+      if (!f) return;
+      const list = getEntries();
+      list.push({
+        name: f.name, cal: f.cal, pro: f.pro, carb: f.carb, fat: f.fat,
+        time: new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
+      });
+      setEntries(list);
+      saveFood(f);
+      renderMain();
+      show("screen-main");
+    };
+  });
+  $("foods-list").querySelectorAll(".entry-del").forEach(btn => {
+    btn.onclick = (ev) => {
+      ev.stopPropagation();
+      const foods = getFoods() || {};
+      delete foods[btn.dataset.k];
+      LS.set("mt_foods", foods);
+      renderFoods();
+    };
+  });
+}
+
+$("btn-saved").onclick = () => { $("food-search").value = ""; renderFoods(); show("screen-foods"); };
+$("btn-foods-close").onclick = () => show("screen-main");
+$("food-search").oninput = () => renderFoods();
 
 function getBurns() {
   return Object.assign({}, DEFAULT_BURNS, LS.get("mt_burns", {}));
@@ -734,6 +824,7 @@ $("btn-add").onclick = () => {
     const list = getEntries();
     list.push(pendingMeal);
     setEntries(list);
+    saveFood(pendingMeal);
     pendingMeal = null;
   }
   renderMain();
@@ -742,6 +833,8 @@ $("btn-add").onclick = () => {
 $("btn-discard").onclick = () => { pendingMeal = null; show("screen-main"); };
 
 /* ---------- Boot ---------- */
+
+migrateFoods();
 
 if (LS.get("mt_apiKey", "") && LS.get("mt_targets", null)) {
   renderMain();
