@@ -116,6 +116,12 @@ button.secondary {
 .entry-name { font-size: 15px; font-weight: 500; }
 .entry-detail { font-size: 12.5px; color: var(--text-muted); margin-top: 2px; font-variant-numeric: tabular-nums; }
 .entry-del { background: none; border: none; color: var(--text-muted); font-size: 17px; padding: 8px; cursor: pointer; }
+.entry-actions { display: flex; align-items: center; gap: 2px; }
+.entry-save {
+  background: none; border: 1px solid var(--border); color: var(--accent);
+  font-size: 13px; font-weight: 600; font-family: inherit;
+  border-radius: 14px; padding: 5px 12px; cursor: pointer;
+}
 .empty { color: var(--text-muted); font-size: 14px; text-align: center; padding: 20px 0; }
 
 /* Forms */
@@ -258,7 +264,7 @@ textarea { resize: vertical; line-height: 1.5; font-size: 15px; }
 
   <button class="primary" id="btn-photo">&#128247;&nbsp; Snap a meal</button>
   <div class="row2" style="margin-top:-8px; margin-bottom:16px">
-    <div><button class="secondary" id="btn-saved" style="margin-top:0">Saved meals</button></div>
+    <div><button class="secondary" id="btn-saved" style="margin-top:0">Meals</button></div>
     <div><button class="secondary" id="btn-quick" style="margin-top:0">Quick add</button></div>
   </div>
   <input type="file" id="file-input" accept="image/*" capture="environment" style="display:none">
@@ -296,7 +302,7 @@ textarea { resize: vertical; line-height: 1.5; font-size: 15px; }
     <h1>Quick add</h1>
     <button class="iconbtn" id="btn-quick-close" aria-label="Close">&#10005;</button>
   </div>
-  <p class="sub">For foods you know from the label. No photo, no connection needed. It saves to your library too.</p>
+  <p class="sub">For foods you know from the label. No photo, no connection needed. It shows up in your recent meals too.</p>
   <div class="card">
     <label class="field" style="margin-top:0">Name</label>
     <input type="text" id="q-name" placeholder="Protein shake, 2 scoops" autocomplete="off">
@@ -337,15 +343,18 @@ textarea { resize: vertical; line-height: 1.5; font-size: 15px; }
   </div>
 </div>
 
-<!-- SAVED MEALS -->
+<!-- MEALS: RECENT + SAVED -->
 <div class="screen" id="screen-foods">
   <div class="topbar">
-    <h1>Saved meals</h1>
+    <h1>Meals</h1>
     <button class="iconbtn" id="btn-foods-close" aria-label="Close">&#10005;</button>
   </div>
-  <p class="sub">Every meal you add from a photo is saved here. Tap one to log it again. No connection needed.</p>
+  <p class="sub">Tap a meal to log it again. Recent meals roll off as you log new ones. Tap Save to keep one for good.</p>
   <input type="search" id="food-search" placeholder="Search" autocomplete="off">
-  <div class="card" id="foods-list" style="margin-top:12px"></div>
+  <h2>Recent</h2>
+  <div class="card" id="recent-list"></div>
+  <h2>Saved</h2>
+  <div class="card" id="foods-list"></div>
 </div>
 
 <!-- WORKOUTS -->
@@ -416,6 +425,38 @@ const DEFAULT_ROUTINES = {
 
 function getRoutines() {
   return Object.assign({}, DEFAULT_ROUTINES, LS.get("mt_routines", {}));
+}
+
+/* ---------- Recent meals: rolling list, newest first ---------- */
+
+const RECENT_MAX = 20;
+
+function getRecent() { return LS.get("mt_recent", []); }
+
+function recordMeal(meal) {
+  const k = meal.name.trim().toLowerCase();
+  const foods = getFoods() || {};
+  if (foods[k]) {
+    saveFood(meal);
+    return;
+  }
+  const recent = getRecent().filter(r => r.k !== k);
+  recent.unshift({
+    k,
+    name: meal.name,
+    cal: meal.cal, pro: meal.pro, carb: meal.carb, fat: meal.fat,
+    items: meal.items,
+    last: Date.now()
+  });
+  LS.set("mt_recent", recent.slice(0, RECENT_MAX));
+}
+
+function promoteRecent(k) {
+  const recent = getRecent();
+  const r = recent.find(x => x.k === k);
+  if (!r) return;
+  saveFood({ name: r.name, cal: r.cal, pro: r.pro, carb: r.carb, fat: r.fat, items: r.items });
+  LS.set("mt_recent", recent.filter(x => x.k !== k));
 }
 
 /* ---------- Saved meals library ---------- */
@@ -491,14 +532,67 @@ function migrateFoods() {
   LS.set("mt_foods", foods);
 }
 
+function logAgain(f) {
+  openConfirm({
+    name: f.name,
+    items: f.items && f.items.length
+      ? f.items
+      : [{ name: f.name, portion: "saved estimate", calories: f.cal, protein_g: f.pro, carbs_g: f.carb, fat_g: f.fat }],
+    notes: ""
+  });
+}
+
+function renderRecent() {
+  const q = $("food-search").value.trim().toLowerCase();
+  const recent = getRecent().filter(r => !q || r.k.includes(q));
+
+  if (recent.length === 0) {
+    $("recent-list").innerHTML = `<div class="empty">${q ? "No match." : "Nothing recent. Meals you log show up here, newest first."}</div>`;
+    return;
+  }
+  $("recent-list").innerHTML = recent.map(r => `
+    <div class="entry" data-k="${escapeHtml(r.k)}" style="cursor:pointer">
+      <div>
+        <div class="entry-name">${escapeHtml(r.name)}</div>
+        <div class="entry-detail">${fmt(r.cal)} kcal &middot; P ${fmt(r.pro)} &middot; C ${fmt(r.carb)} &middot; F ${fmt(r.fat)}</div>
+      </div>
+      <div class="entry-actions">
+        <button class="entry-save" data-k="${escapeHtml(r.k)}">Save</button>
+        <button class="entry-del" data-k="${escapeHtml(r.k)}" aria-label="Remove">&#10005;</button>
+      </div>
+    </div>`).join("");
+
+  $("recent-list").querySelectorAll(".entry").forEach(row => {
+    row.onclick = () => {
+      const r = getRecent().find(x => x.k === row.dataset.k);
+      if (r) logAgain(r);
+    };
+  });
+  $("recent-list").querySelectorAll(".entry-save").forEach(btn => {
+    btn.onclick = (ev) => {
+      ev.stopPropagation();
+      promoteRecent(btn.dataset.k);
+      renderFoods();
+    };
+  });
+  $("recent-list").querySelectorAll(".entry-del").forEach(btn => {
+    btn.onclick = (ev) => {
+      ev.stopPropagation();
+      LS.set("mt_recent", getRecent().filter(x => x.k !== btn.dataset.k));
+      renderFoods();
+    };
+  });
+}
+
 function renderFoods() {
+  renderRecent();
   const q = $("food-search").value.trim().toLowerCase();
   const foods = Object.entries(getFoods() || {})
     .filter(([k]) => !q || k.includes(q))
     .sort((a, b) => (b[1].count - a[1].count) || (b[1].last - a[1].last));
 
   if (foods.length === 0) {
-    $("foods-list").innerHTML = `<div class="empty">${q ? "No match." : "Nothing saved yet. Meals you add from photos will appear here automatically."}</div>`;
+    $("foods-list").innerHTML = `<div class="empty">${q ? "No match." : "Nothing saved yet. Tap Save on a recent meal to keep it here."}</div>`;
     return;
   }
   $("foods-list").innerHTML = foods.map(([k, f]) => `
@@ -513,14 +607,7 @@ function renderFoods() {
   $("foods-list").querySelectorAll(".entry").forEach(row => {
     row.onclick = () => {
       const f = (getFoods() || {})[row.dataset.k];
-      if (!f) return;
-      openConfirm({
-        name: f.name,
-        items: f.items && f.items.length
-          ? f.items
-          : [{ name: f.name, portion: "saved estimate", calories: f.cal, protein_g: f.pro, carbs_g: f.carb, fat_g: f.fat }],
-        notes: ""
-      });
+      if (f) logAgain(f);
     };
   });
   $("foods-list").querySelectorAll(".entry-del").forEach(btn => {
@@ -558,7 +645,7 @@ $("btn-quick-add").onclick = () => {
     time: new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
   }));
   setEntries(list);
-  saveFood(meal);
+  recordMeal(meal);
   renderMain();
   show("screen-main");
 };
@@ -1124,7 +1211,7 @@ $("btn-add").onclick = () => {
       time: new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
     });
     setEntries(list);
-    saveFood({
+    recordMeal({
       name: confirmBase.name,
       cal: full.cal, pro: full.pro, carb: full.carb, fat: full.fat,
       items: confirmBase.items

@@ -1,4 +1,4 @@
-const CACHE = "macros-v1";
+const CACHE = "macros-v2";
 const ASSETS = ["./", "./index.html", "./manifest.json", "./apple-touch-icon.png"];
 
 self.addEventListener("install", (event) => {
