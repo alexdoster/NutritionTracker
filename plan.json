@@ -1,0 +1,1300 @@
+{
+  "generatedAt": 1783349439163,
+  "goalDate": "2026-07-30",
+  "days": [
+    {
+      "date": "2026-07-06",
+      "workout": "push",
+      "workout_note": "",
+      "meals": {
+        "breakfast": [
+          {
+            "name": "Egg and turkey scramble with toast",
+            "uses_leftover": false,
+            "leftover_name": "",
+            "items": [
+              {
+                "name": "Eggs, scrambled",
+                "portion": "4 eggs",
+                "calories": 280,
+                "protein_g": 24,
+                "carbs_g": 2,
+                "fat_g": 20
+              },
+              {
+                "name": "Ground turkey",
+                "portion": "4 oz cooked",
+                "calories": 170,
+                "protein_g": 22,
+                "carbs_g": 0,
+                "fat_g": 9
+              },
+              {
+                "name": "Good Seed toast",
+                "portion": "1 slice",
+                "calories": 110,
+                "protein_g": 5,
+                "carbs_g": 22,
+                "fat_g": 1.5
+              }
+            ]
+          },
+          {
+            "name": "Protein shake with Greek yogurt and banana",
+            "uses_leftover": false,
+            "leftover_name": "",
+            "items": [
+              {
+                "name": "Premier Protein shake",
+                "portion": "1 bottle (11 oz)",
+                "calories": 160,
+                "protein_g": 30,
+                "carbs_g": 4,
+                "fat_g": 3
+              },
+              {
+                "name": "Oikos Triple Zero yogurt",
+                "portion": "1 cup",
+                "calories": 90,
+                "protein_g": 15,
+                "carbs_g": 12,
+                "fat_g": 0
+              },
+              {
+                "name": "Banana",
+                "portion": "1 medium",
+                "calories": 105,
+                "protein_g": 1,
+                "carbs_g": 27,
+                "fat_g": 0
+              }
+            ]
+          }
+        ],
+        "lunch": [
+          {
+            "name": "Baked chicken thighs (cook all 4) with quinoa and black beans",
+            "uses_leftover": false,
+            "leftover_name": "",
+            "items": [
+              {
+                "name": "Chicken thighs",
+                "portion": "3 of 4 thighs, baked or air fried",
+                "calories": 540,
+                "protein_g": 69,
+                "carbs_g": 0,
+                "fat_g": 27
+              },
+              {
+                "name": "Quinoa and brown rice",
+                "portion": "1/2 pouch",
+                "calories": 170,
+                "protein_g": 5,
+                "carbs_g": 33,
+                "fat_g": 3
+              },
+              {
+                "name": "S&W black beans",
+                "portion": "1/2 can",
+                "calories": 110,
+                "protein_g": 7,
+                "carbs_g": 20,
+                "fat_g": 0.5
+              }
+            ]
+          },
+          {
+            "name": "Ground turkey and black bean bowl",
+            "uses_leftover": false,
+            "leftover_name": "",
+            "items": [
+              {
+                "name": "Ground turkey",
+                "portion": "6 oz cooked",
+                "calories": 255,
+                "protein_g": 33,
+                "carbs_g": 0,
+                "fat_g": 13
+              },
+              {
+                "name": "S&W black beans",
+                "portion": "1/2 can",
+                "calories": 110,
+                "protein_g": 7,
+                "carbs_g": 20,
+                "fat_g": 0.5
+              },
+              {
+                "name": "Quinoa and brown rice",
+                "portion": "1/2 pouch",
+                "calories": 170,
+                "protein_g": 5,
+                "carbs_g": 33,
+                "fat_g": 3
+              }
+            ]
+          }
+        ],
+        "dinner": [
+          {
+            "name": "Air fryer chicken chunks with green beans and cottage cheese",
+            "uses_leftover": false,
+            "leftover_name": "",
+            "items": [
+              {
+                "name": "Lightly breaded chicken breast chunks",
+                "portion": "3 servings, air fried",
+                "calories": 570,
+                "protein_g": 42,
+                "carbs_g": 36,
+                "fat_g": 27
+              },
+              {
+                "name": "Organic green beans",
+                "portion": "1 cup",
+                "calories": 35,
+                "protein_g": 2,
+                "carbs_g": 8,
+                "fat_g": 0
+              },
+              {
+                "name": "Cottage cheese (low fat)",
+                "portion": "1/2 cup",
+                "calories": 90,
+                "protein_g": 12,
+                "carbs_g": 4,
+                "fat_g": 2
+              }
+            ]
+          },
+          {
+            "name": "Beef patty with green beans and rice",
+            "uses_leftover": false,
+            "leftover_name": "",
+            "items": [
+              {
+                "name": "Angus Choice beef patty",
+                "portion": "1.5 patties, pan seared",
+                "calories": 375,
+                "protein_g": 33,
+                "carbs_g": 0,
+                "fat_g": 27
+              },
+              {
+                "name": "Organic green beans",
+                "portion": "1 cup",
+                "calories": 35,
+                "protein_g": 2,
+                "carbs_g": 8,
+                "fat_g": 0
+              },
+              {
+                "name": "Quinoa and brown rice",
+                "portion": "1/2 pouch",
+                "calories": 170,
+                "protein_g": 5,
+                "carbs_g": 33,
+                "fat_g": 3
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "date": "2026-07-07",
+      "workout": "pull",
+      "workout_note": "",
+      "meals": {
+        "breakfast": [
+          {
+            "name": "Cottage cheese and granola bowl with banana",
+            "uses_leftover": false,
+            "leftover_name": "",
+            "items": [
+              {
+                "name": "Cottage cheese (low fat)",
+                "portion": "1 cup",
+                "calories": 180,
+                "protein_g": 24,
+                "carbs_g": 8,
+                "fat_g": 4
+              },
+              {
+                "name": "Ancient Grains granola",
+                "portion": "1/3 cup",
+                "calories": 150,
+                "protein_g": 4,
+                "carbs_g": 22,
+                "fat_g": 5
+              },
+              {
+                "name": "Banana",
+                "portion": "1 medium",
+                "calories": 105,
+                "protein_g": 1,
+                "carbs_g": 27,
+                "fat_g": 0
+              }
+            ]
+          },
+          {
+            "name": "Protein bar and shake, on the go",
+            "uses_leftover": false,
+            "leftover_name": "",
+            "items": [
+              {
+                "name": "Nature Valley protein bar",
+                "portion": "1 bar",
+                "calories": 190,
+                "protein_g": 10,
+                "carbs_g": 15,
+                "fat_g": 9
+              },
+              {
+                "name": "Premier Protein shake",
+                "portion": "1 bottle (11 oz)",
+                "calories": 160,
+                "protein_g": 30,
+                "carbs_g": 4,
+                "fat_g": 3
+              }
+            ]
+          }
+        ],
+        "lunch": [
+          {
+            "name": "Chicken thigh leftover with rice and kimchi",
+            "uses_leftover": true,
+            "leftover_name": "Chicken thighs",
+            "items": [
+              {
+                "name": "Chicken thigh",
+                "portion": "1 leftover thigh",
+                "calories": 180,
+                "protein_g": 23,
+                "carbs_g": 0,
+                "fat_g": 9
+              },
+              {
+                "name": "Quinoa and brown rice",
+                "portion": "1/2 pouch",
+                "calories": 170,
+                "protein_g": 5,
+                "carbs_g": 33,
+                "fat_g": 3
+              },
+              {
+                "name": "Kimchi",
+                "portion": "1/4 cup",
+                "calories": 25,
+                "protein_g": 1,
+                "carbs_g": 4,
+                "fat_g": 0
+              }
+            ]
+          },
+          {
+            "name": "Mandarin orange chicken bowl with green beans",
+            "uses_leftover": false,
+            "leftover_name": "",
+            "items": [
+              {
+                "name": "Mandarin orange chicken (frozen entree)",
+                "portion": "2 cups",
+                "calories": 760,
+                "protein_g": 40,
+                "carbs_g": 90,
+                "fat_g": 28
+              },
+              {
+                "name": "Organic green beans",
+                "portion": "1 cup",
+                "calories": 35,
+                "protein_g": 2,
+                "carbs_g": 8,
+                "fat_g": 0
+              }
+            ]
+          }
+        ],
+        "dinner": [
+          {
+            "name": "Detroit-style pizza night with green beans",
+            "uses_leftover": false,
+            "leftover_name": "",
+            "items": [
+              {
+                "name": "Detroit-style deep dish pizza",
+                "portion": "2 slices",
+                "calories": 640,
+                "protein_g": 28,
+                "carbs_g": 68,
+                "fat_g": 28
+              },
+              {
+                "name": "Organic green beans",
+                "portion": "1 cup",
+                "calories": 35,
+                "protein_g": 2,
+                "carbs_g": 8,
+                "fat_g": 0
+              }
+            ]
+          },
+          {
+            "name": "Ground turkey taco bowl",
+            "uses_leftover": false,
+            "leftover_name": "",
+            "items": [
+              {
+                "name": "Ground turkey",
+                "portion": "6 oz cooked, taco-seasoned",
+                "calories": 255,
+                "protein_g": 33,
+                "carbs_g": 0,
+                "fat_g": 13
+              },
+              {
+                "name": "S&W black beans",
+                "portion": "1/2 can",
+                "calories": 110,
+                "protein_g": 7,
+                "carbs_g": 20,
+                "fat_g": 0.5
+              },
+              {
+                "name": "Quinoa and brown rice",
+                "portion": "1/2 pouch",
+                "calories": 170,
+                "protein_g": 5,
+                "carbs_g": 33,
+                "fat_g": 3
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "date": "2026-07-08",
+      "workout": "rest",
+      "workout_note": "",
+      "meals": {
+        "breakfast": [
+          {
+            "name": "Protein shake with Greek yogurt and banana",
+            "uses_leftover": false,
+            "leftover_name": "",
+            "items": [
+              {
+                "name": "Premier Protein shake",
+                "portion": "1 bottle (11 oz)",
+                "calories": 160,
+                "protein_g": 30,
+                "carbs_g": 4,
+                "fat_g": 3
+              },
+              {
+                "name": "Oikos Triple Zero yogurt",
+                "portion": "1 cup",
+                "calories": 90,
+                "protein_g": 15,
+                "carbs_g": 12,
+                "fat_g": 0
+              },
+              {
+                "name": "Banana",
+                "portion": "1 medium",
+                "calories": 105,
+                "protein_g": 1,
+                "carbs_g": 27,
+                "fat_g": 0
+              }
+            ]
+          },
+          {
+            "name": "Egg and spam skillet",
+            "uses_leftover": false,
+            "leftover_name": "",
+            "items": [
+              {
+                "name": "Eggs, scrambled",
+                "portion": "4 eggs",
+                "calories": 280,
+                "protein_g": 24,
+                "carbs_g": 2,
+                "fat_g": 20
+              },
+              {
+                "name": "Spam (less sodium)",
+                "portion": "2 oz pan-fried",
+                "calories": 160,
+                "protein_g": 8,
+                "carbs_g": 2,
+                "fat_g": 13
+              }
+            ]
+          }
+        ],
+        "lunch": [
+          {
+            "name": "Ground turkey and black bean bowl",
+            "uses_leftover": false,
+            "leftover_name": "",
+            "items": [
+              {
+                "name": "Ground turkey",
+                "portion": "6 oz cooked",
+                "calories": 255,
+                "protein_g": 33,
+                "carbs_g": 0,
+                "fat_g": 13
+              },
+              {
+                "name": "S&W black beans",
+                "portion": "1/2 can",
+                "calories": 110,
+                "protein_g": 7,
+                "carbs_g": 20,
+                "fat_g": 0.5
+              },
+              {
+                "name": "Quinoa and brown rice",
+                "portion": "1/2 pouch",
+                "calories": 170,
+                "protein_g": 5,
+                "carbs_g": 33,
+                "fat_g": 3
+              }
+            ]
+          },
+          {
+            "name": "Marinated meat stir-fry with rice",
+            "uses_leftover": false,
+            "leftover_name": "",
+            "items": [
+              {
+                "name": "Marinated meat",
+                "portion": "1 bag, about 7 oz cooked",
+                "calories": 310,
+                "protein_g": 42,
+                "carbs_g": 6,
+                "fat_g": 13
+              },
+              {
+                "name": "Quinoa and brown rice",
+                "portion": "1/2 pouch",
+                "calories": 170,
+                "protein_g": 5,
+                "carbs_g": 33,
+                "fat_g": 3
+              }
+            ]
+          }
+        ],
+        "dinner": [
+          {
+            "name": "Beef patty with green beans and rice",
+            "uses_leftover": false,
+            "leftover_name": "",
+            "items": [
+              {
+                "name": "Angus Choice beef patty",
+                "portion": "1.5 patties, pan seared",
+                "calories": 375,
+                "protein_g": 33,
+                "carbs_g": 0,
+                "fat_g": 27
+              },
+              {
+                "name": "Organic green beans",
+                "portion": "1 cup",
+                "calories": 35,
+                "protein_g": 2,
+                "carbs_g": 8,
+                "fat_g": 0
+              },
+              {
+                "name": "Quinoa and brown rice",
+                "portion": "1/2 pouch",
+                "calories": 170,
+                "protein_g": 5,
+                "carbs_g": 33,
+                "fat_g": 3
+              }
+            ]
+          },
+          {
+            "name": "Quick beef sticks, eggs, and banana plate",
+            "uses_leftover": false,
+            "leftover_name": "",
+            "items": [
+              {
+                "name": "Greenridge beef sticks",
+                "portion": "3 sticks",
+                "calories": 240,
+                "protein_g": 18,
+                "carbs_g": 3,
+                "fat_g": 18
+              },
+              {
+                "name": "Eggs, hard boiled",
+                "portion": "3 eggs",
+                "calories": 210,
+                "protein_g": 18,
+                "carbs_g": 1.5,
+                "fat_g": 15
+              },
+              {
+                "name": "Banana",
+                "portion": "1 medium",
+                "calories": 105,
+                "protein_g": 1,
+                "carbs_g": 27,
+                "fat_g": 0
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "date": "2026-07-09",
+      "workout": "legs",
+      "workout_note": "",
+      "meals": {
+        "breakfast": [
+          {
+            "name": "Egg and turkey scramble with toast",
+            "uses_leftover": false,
+            "leftover_name": "",
+            "items": [
+              {
+                "name": "Eggs, scrambled",
+                "portion": "4 eggs",
+                "calories": 280,
+                "protein_g": 24,
+                "carbs_g": 2,
+                "fat_g": 20
+              },
+              {
+                "name": "Ground turkey",
+                "portion": "4 oz cooked",
+                "calories": 170,
+                "protein_g": 22,
+                "carbs_g": 0,
+                "fat_g": 9
+              },
+              {
+                "name": "Good Seed toast",
+                "portion": "1 slice",
+                "calories": 110,
+                "protein_g": 5,
+                "carbs_g": 22,
+                "fat_g": 1.5
+              }
+            ]
+          },
+          {
+            "name": "Cottage cheese and granola bowl with banana",
+            "uses_leftover": false,
+            "leftover_name": "",
+            "items": [
+              {
+                "name": "Cottage cheese (low fat)",
+                "portion": "1 cup",
+                "calories": 180,
+                "protein_g": 24,
+                "carbs_g": 8,
+                "fat_g": 4
+              },
+              {
+                "name": "Ancient Grains granola",
+                "portion": "1/3 cup",
+                "calories": 150,
+                "protein_g": 4,
+                "carbs_g": 22,
+                "fat_g": 5
+              },
+              {
+                "name": "Banana",
+                "portion": "1 medium",
+                "calories": 105,
+                "protein_g": 1,
+                "carbs_g": 27,
+                "fat_g": 0
+              }
+            ]
+          }
+        ],
+        "lunch": [
+          {
+            "name": "Mandarin orange chicken bowl with green beans",
+            "uses_leftover": false,
+            "leftover_name": "",
+            "items": [
+              {
+                "name": "Mandarin orange chicken (frozen entree)",
+                "portion": "2 cups",
+                "calories": 760,
+                "protein_g": 40,
+                "carbs_g": 90,
+                "fat_g": 28
+              },
+              {
+                "name": "Organic green beans",
+                "portion": "1 cup",
+                "calories": 35,
+                "protein_g": 2,
+                "carbs_g": 8,
+                "fat_g": 0
+              }
+            ]
+          },
+          {
+            "name": "Marinated meat stir-fry with rice",
+            "uses_leftover": false,
+            "leftover_name": "",
+            "items": [
+              {
+                "name": "Marinated meat",
+                "portion": "1 bag, about 7 oz cooked",
+                "calories": 310,
+                "protein_g": 42,
+                "carbs_g": 6,
+                "fat_g": 13
+              },
+              {
+                "name": "Quinoa and brown rice",
+                "portion": "1/2 pouch",
+                "calories": 170,
+                "protein_g": 5,
+                "carbs_g": 33,
+                "fat_g": 3
+              }
+            ]
+          }
+        ],
+        "dinner": [
+          {
+            "name": "Air fryer chicken chunks with green beans and cottage cheese",
+            "uses_leftover": false,
+            "leftover_name": "",
+            "items": [
+              {
+                "name": "Lightly breaded chicken breast chunks",
+                "portion": "3 servings, air fried",
+                "calories": 570,
+                "protein_g": 42,
+                "carbs_g": 36,
+                "fat_g": 27
+              },
+              {
+                "name": "Organic green beans",
+                "portion": "1 cup",
+                "calories": 35,
+                "protein_g": 2,
+                "carbs_g": 8,
+                "fat_g": 0
+              },
+              {
+                "name": "Cottage cheese (low fat)",
+                "portion": "1/2 cup",
+                "calories": 90,
+                "protein_g": 12,
+                "carbs_g": 4,
+                "fat_g": 2
+              }
+            ]
+          },
+          {
+            "name": "Ground turkey and black bean skillet",
+            "uses_leftover": false,
+            "leftover_name": "",
+            "items": [
+              {
+                "name": "Ground turkey",
+                "portion": "5 oz cooked",
+                "calories": 215,
+                "protein_g": 28,
+                "carbs_g": 0,
+                "fat_g": 11
+              },
+              {
+                "name": "S&W black beans",
+                "portion": "1/2 can",
+                "calories": 110,
+                "protein_g": 7,
+                "carbs_g": 20,
+                "fat_g": 0.5
+              },
+              {
+                "name": "Quinoa and brown rice",
+                "portion": "1/2 pouch",
+                "calories": 170,
+                "protein_g": 5,
+                "carbs_g": 33,
+                "fat_g": 3
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "date": "2026-07-10",
+      "workout": "cardio",
+      "workout_note": "",
+      "meals": {
+        "breakfast": [
+          {
+            "name": "Protein shake with Greek yogurt and banana",
+            "uses_leftover": false,
+            "leftover_name": "",
+            "items": [
+              {
+                "name": "Premier Protein shake",
+                "portion": "1 bottle (11 oz)",
+                "calories": 160,
+                "protein_g": 30,
+                "carbs_g": 4,
+                "fat_g": 3
+              },
+              {
+                "name": "Oikos Triple Zero yogurt",
+                "portion": "1 cup",
+                "calories": 90,
+                "protein_g": 15,
+                "carbs_g": 12,
+                "fat_g": 0
+              },
+              {
+                "name": "Banana",
+                "portion": "1 medium",
+                "calories": 105,
+                "protein_g": 1,
+                "carbs_g": 27,
+                "fat_g": 0
+              }
+            ]
+          },
+          {
+            "name": "Protein bar and shake, on the go",
+            "uses_leftover": false,
+            "leftover_name": "",
+            "items": [
+              {
+                "name": "Nature Valley protein bar",
+                "portion": "1 bar",
+                "calories": 190,
+                "protein_g": 10,
+                "carbs_g": 15,
+                "fat_g": 9
+              },
+              {
+                "name": "Premier Protein shake",
+                "portion": "1 bottle (11 oz)",
+                "calories": 160,
+                "protein_g": 30,
+                "carbs_g": 4,
+                "fat_g": 3
+              }
+            ]
+          }
+        ],
+        "lunch": [
+          {
+            "name": "Ground turkey and black bean bowl",
+            "uses_leftover": false,
+            "leftover_name": "",
+            "items": [
+              {
+                "name": "Ground turkey",
+                "portion": "6 oz cooked",
+                "calories": 255,
+                "protein_g": 33,
+                "carbs_g": 0,
+                "fat_g": 13
+              },
+              {
+                "name": "S&W black beans",
+                "portion": "1/2 can",
+                "calories": 110,
+                "protein_g": 7,
+                "carbs_g": 20,
+                "fat_g": 0.5
+              },
+              {
+                "name": "Quinoa and brown rice",
+                "portion": "1/2 pouch",
+                "calories": 170,
+                "protein_g": 5,
+                "carbs_g": 33,
+                "fat_g": 3
+              }
+            ]
+          },
+          {
+            "name": "Mandarin orange chicken bowl with green beans",
+            "uses_leftover": false,
+            "leftover_name": "",
+            "items": [
+              {
+                "name": "Mandarin orange chicken (frozen entree)",
+                "portion": "2 cups",
+                "calories": 760,
+                "protein_g": 40,
+                "carbs_g": 90,
+                "fat_g": 28
+              },
+              {
+                "name": "Organic green beans",
+                "portion": "1 cup",
+                "calories": 35,
+                "protein_g": 2,
+                "carbs_g": 8,
+                "fat_g": 0
+              }
+            ]
+          }
+        ],
+        "dinner": [
+          {
+            "name": "Detroit-style pizza night with green beans",
+            "uses_leftover": false,
+            "leftover_name": "",
+            "items": [
+              {
+                "name": "Detroit-style deep dish pizza",
+                "portion": "2 slices",
+                "calories": 640,
+                "protein_g": 28,
+                "carbs_g": 68,
+                "fat_g": 28
+              },
+              {
+                "name": "Organic green beans",
+                "portion": "1 cup",
+                "calories": 35,
+                "protein_g": 2,
+                "carbs_g": 8,
+                "fat_g": 0
+              }
+            ]
+          },
+          {
+            "name": "Ground turkey taco bowl",
+            "uses_leftover": false,
+            "leftover_name": "",
+            "items": [
+              {
+                "name": "Ground turkey",
+                "portion": "6 oz cooked, taco-seasoned",
+                "calories": 255,
+                "protein_g": 33,
+                "carbs_g": 0,
+                "fat_g": 13
+              },
+              {
+                "name": "S&W black beans",
+                "portion": "1/2 can",
+                "calories": 110,
+                "protein_g": 7,
+                "carbs_g": 20,
+                "fat_g": 0.5
+              },
+              {
+                "name": "Quinoa and brown rice",
+                "portion": "1/2 pouch",
+                "calories": 170,
+                "protein_g": 5,
+                "carbs_g": 33,
+                "fat_g": 3
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "date": "2026-07-11",
+      "workout": "push",
+      "workout_note": "Add 2 extra sets of lateral raises (20 lb) and one more set of cable rope triceps pushdown for extra shoulder/arm volume.",
+      "meals": {
+        "breakfast": [
+          {
+            "name": "Cottage cheese and granola bowl with banana",
+            "uses_leftover": false,
+            "leftover_name": "",
+            "items": [
+              {
+                "name": "Cottage cheese (low fat)",
+                "portion": "1 cup",
+                "calories": 180,
+                "protein_g": 24,
+                "carbs_g": 8,
+                "fat_g": 4
+              },
+              {
+                "name": "Ancient Grains granola",
+                "portion": "1/3 cup",
+                "calories": 150,
+                "protein_g": 4,
+                "carbs_g": 22,
+                "fat_g": 5
+              },
+              {
+                "name": "Banana",
+                "portion": "1 medium",
+                "calories": 105,
+                "protein_g": 1,
+                "carbs_g": 27,
+                "fat_g": 0
+              }
+            ]
+          },
+          {
+            "name": "Egg and spam skillet",
+            "uses_leftover": false,
+            "leftover_name": "",
+            "items": [
+              {
+                "name": "Eggs, scrambled",
+                "portion": "4 eggs",
+                "calories": 280,
+                "protein_g": 24,
+                "carbs_g": 2,
+                "fat_g": 20
+              },
+              {
+                "name": "Spam (less sodium)",
+                "portion": "2 oz pan-fried",
+                "calories": 160,
+                "protein_g": 8,
+                "carbs_g": 2,
+                "fat_g": 13
+              }
+            ]
+          }
+        ],
+        "lunch": [
+          {
+            "name": "Ground turkey and black bean bowl",
+            "uses_leftover": false,
+            "leftover_name": "",
+            "items": [
+              {
+                "name": "Ground turkey",
+                "portion": "6 oz cooked",
+                "calories": 255,
+                "protein_g": 33,
+                "carbs_g": 0,
+                "fat_g": 13
+              },
+              {
+                "name": "S&W black beans",
+                "portion": "1/2 can",
+                "calories": 110,
+                "protein_g": 7,
+                "carbs_g": 20,
+                "fat_g": 0.5
+              },
+              {
+                "name": "Quinoa and brown rice",
+                "portion": "1/2 pouch",
+                "calories": 170,
+                "protein_g": 5,
+                "carbs_g": 33,
+                "fat_g": 3
+              }
+            ]
+          },
+          {
+            "name": "Marinated meat stir-fry with rice",
+            "uses_leftover": false,
+            "leftover_name": "",
+            "items": [
+              {
+                "name": "Marinated meat",
+                "portion": "1 bag, about 7 oz cooked",
+                "calories": 310,
+                "protein_g": 42,
+                "carbs_g": 6,
+                "fat_g": 13
+              },
+              {
+                "name": "Quinoa and brown rice",
+                "portion": "1/2 pouch",
+                "calories": 170,
+                "protein_g": 5,
+                "carbs_g": 33,
+                "fat_g": 3
+              }
+            ]
+          }
+        ],
+        "dinner": [
+          {
+            "name": "Beef patty with green beans and rice",
+            "uses_leftover": false,
+            "leftover_name": "",
+            "items": [
+              {
+                "name": "Angus Choice beef patty",
+                "portion": "1.5 patties, pan seared",
+                "calories": 375,
+                "protein_g": 33,
+                "carbs_g": 0,
+                "fat_g": 27
+              },
+              {
+                "name": "Organic green beans",
+                "portion": "1 cup",
+                "calories": 35,
+                "protein_g": 2,
+                "carbs_g": 8,
+                "fat_g": 0
+              },
+              {
+                "name": "Quinoa and brown rice",
+                "portion": "1/2 pouch",
+                "calories": 170,
+                "protein_g": 5,
+                "carbs_g": 33,
+                "fat_g": 3
+              }
+            ]
+          },
+          {
+            "name": "Quick beef sticks, eggs, and banana plate",
+            "uses_leftover": false,
+            "leftover_name": "",
+            "items": [
+              {
+                "name": "Greenridge beef sticks",
+                "portion": "3 sticks",
+                "calories": 240,
+                "protein_g": 18,
+                "carbs_g": 3,
+                "fat_g": 18
+              },
+              {
+                "name": "Eggs, hard boiled",
+                "portion": "3 eggs",
+                "calories": 210,
+                "protein_g": 18,
+                "carbs_g": 1.5,
+                "fat_g": 15
+              },
+              {
+                "name": "Banana",
+                "portion": "1 medium",
+                "calories": 105,
+                "protein_g": 1,
+                "carbs_g": 27,
+                "fat_g": 0
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "date": "2026-07-12",
+      "workout": "cardio",
+      "workout_note": "",
+      "meals": {
+        "breakfast": [
+          {
+            "name": "Egg and turkey scramble with toast",
+            "uses_leftover": false,
+            "leftover_name": "",
+            "items": [
+              {
+                "name": "Eggs, scrambled",
+                "portion": "4 eggs",
+                "calories": 280,
+                "protein_g": 24,
+                "carbs_g": 2,
+                "fat_g": 20
+              },
+              {
+                "name": "Ground turkey",
+                "portion": "4 oz cooked",
+                "calories": 170,
+                "protein_g": 22,
+                "carbs_g": 0,
+                "fat_g": 9
+              },
+              {
+                "name": "Good Seed toast",
+                "portion": "1 slice",
+                "calories": 110,
+                "protein_g": 5,
+                "carbs_g": 22,
+                "fat_g": 1.5
+              }
+            ]
+          },
+          {
+            "name": "Protein shake with Greek yogurt and banana",
+            "uses_leftover": false,
+            "leftover_name": "",
+            "items": [
+              {
+                "name": "Premier Protein shake",
+                "portion": "1 bottle (11 oz)",
+                "calories": 160,
+                "protein_g": 30,
+                "carbs_g": 4,
+                "fat_g": 3
+              },
+              {
+                "name": "Oikos Triple Zero yogurt",
+                "portion": "1 cup",
+                "calories": 90,
+                "protein_g": 15,
+                "carbs_g": 12,
+                "fat_g": 0
+              },
+              {
+                "name": "Banana",
+                "portion": "1 medium",
+                "calories": 105,
+                "protein_g": 1,
+                "carbs_g": 27,
+                "fat_g": 0
+              }
+            ]
+          }
+        ],
+        "lunch": [
+          {
+            "name": "Mandarin orange chicken bowl with green beans",
+            "uses_leftover": false,
+            "leftover_name": "",
+            "items": [
+              {
+                "name": "Mandarin orange chicken (frozen entree)",
+                "portion": "2 cups",
+                "calories": 760,
+                "protein_g": 40,
+                "carbs_g": 90,
+                "fat_g": 28
+              },
+              {
+                "name": "Organic green beans",
+                "portion": "1 cup",
+                "calories": 35,
+                "protein_g": 2,
+                "carbs_g": 8,
+                "fat_g": 0
+              }
+            ]
+          },
+          {
+            "name": "Ground turkey and black bean bowl",
+            "uses_leftover": false,
+            "leftover_name": "",
+            "items": [
+              {
+                "name": "Ground turkey",
+                "portion": "6 oz cooked",
+                "calories": 255,
+                "protein_g": 33,
+                "carbs_g": 0,
+                "fat_g": 13
+              },
+              {
+                "name": "S&W black beans",
+                "portion": "1/2 can",
+                "calories": 110,
+                "protein_g": 7,
+                "carbs_g": 20,
+                "fat_g": 0.5
+              },
+              {
+                "name": "Quinoa and brown rice",
+                "portion": "1/2 pouch",
+                "calories": 170,
+                "protein_g": 5,
+                "carbs_g": 33,
+                "fat_g": 3
+              }
+            ]
+          }
+        ],
+        "dinner": [
+          {
+            "name": "Air fryer chicken chunks with green beans and cottage cheese",
+            "uses_leftover": false,
+            "leftover_name": "",
+            "items": [
+              {
+                "name": "Lightly breaded chicken breast chunks",
+                "portion": "3 servings, air fried",
+                "calories": 570,
+                "protein_g": 42,
+                "carbs_g": 36,
+                "fat_g": 27
+              },
+              {
+                "name": "Organic green beans",
+                "portion": "1 cup",
+                "calories": 35,
+                "protein_g": 2,
+                "carbs_g": 8,
+                "fat_g": 0
+              },
+              {
+                "name": "Cottage cheese (low fat)",
+                "portion": "1/2 cup",
+                "calories": 90,
+                "protein_g": 12,
+                "carbs_g": 4,
+                "fat_g": 2
+              }
+            ]
+          },
+          {
+            "name": "Ground turkey taco bowl",
+            "uses_leftover": false,
+            "leftover_name": "",
+            "items": [
+              {
+                "name": "Ground turkey",
+                "portion": "6 oz cooked, taco-seasoned",
+                "calories": 255,
+                "protein_g": 33,
+                "carbs_g": 0,
+                "fat_g": 13
+              },
+              {
+                "name": "S&W black beans",
+                "portion": "1/2 can",
+                "calories": 110,
+                "protein_g": 7,
+                "carbs_g": 20,
+                "fat_g": 0.5
+              },
+              {
+                "name": "Quinoa and brown rice",
+                "portion": "1/2 pouch",
+                "calories": 170,
+                "protein_g": 5,
+                "carbs_g": 33,
+                "fat_g": 3
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "shoppingSuggestions": [
+    "Fresh chicken breast or thighs (only one batch on hand)",
+    "Fresh leafy greens or a bagged salad kit for variety",
+    "More bananas or fresh fruit"
+  ]
+}
