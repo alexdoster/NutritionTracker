@@ -1301,8 +1301,13 @@ function renderPlan() {
     $("plan-days").innerHTML = `<div class="empty">No plan yet. Sync your pantry, ask Claude to build a plan, then tap "Pull latest plan".</div>`;
     return;
   }
+  const upcoming = plan.days.filter(d => d.date >= todayKey());
+  if (!upcoming.length) {
+    $("plan-days").innerHTML = `<div class="empty">This plan has run its course. Sync your pantry and ask Claude for a new one.</div>`;
+    return;
+  }
 
-  $("plan-days").innerHTML = plan.days.map(day => {
+  $("plan-days").innerHTML = upcoming.map(day => {
     const slots = ["breakfast", "lunch", "dinner"].map(slot => {
       const opts = (day.meals && day.meals[slot]) || [];
       if (!opts.length) return `<div class="plan-slot"><div class="plan-slot-label">${slot}</div><div class="plan-empty-slot">Nothing planned</div></div>`;
@@ -1943,7 +1948,7 @@ $("btn-discard").onclick = () => { confirmBase = null; confirmLeftoverName = nul
 
 /* ---------- Boot ---------- */
 
-const APP_BUILD = "2026-07-06.5";
+const APP_BUILD = "2026-07-06.6";
 
 migrateFoods();
 seedFoods();
