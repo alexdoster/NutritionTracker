@@ -1,0 +1,203 @@
+{
+  "syncedAt": "2026-07-06T14:33:37.798Z",
+  "goalDate": "2026-07-30",
+  "pantry": [
+    {
+      "id": 1783308358249.3252,
+      "name": "Mandarin orange chicken",
+      "qty": "1 bag",
+      "location": "freezer",
+      "addedDate": "2026-07-05"
+    },
+    {
+      "id": 1783308358249.524,
+      "name": "Ground turkey",
+      "qty": "1 package",
+      "location": "freezer",
+      "addedDate": "2026-07-05"
+    },
+    {
+      "id": 1783308358249.0447,
+      "name": "Motor City Detroit-style deep dish pizza",
+      "qty": "1 box (3 lb 9 oz)",
+      "location": "freezer",
+      "addedDate": "2026-07-05"
+    },
+    {
+      "id": 1783308358245.875,
+      "name": "Marinated meat (bagged)",
+      "qty": "2 bags",
+      "location": "freezer",
+      "addedDate": "2026-07-05"
+    },
+    {
+      "id": 1783305660498.0627,
+      "name": "Chicken thighs",
+      "qty": "4 thighs",
+      "location": "fridge",
+      "addedDate": "2026-07-05"
+    },
+    {
+      "id": 1783305637235.1091,
+      "name": "Soy milk (unsweetened)",
+      "qty": "1 carton",
+      "location": "pantry",
+      "addedDate": "2026-07-05"
+    },
+    {
+      "id": 1783305637235.7102,
+      "name": "S&W black beans",
+      "qty": "2 cans",
+      "location": "pantry",
+      "addedDate": "2026-07-05"
+    },
+    {
+      "id": 1783305637235.536,
+      "name": "Kirkland chicken bone broth",
+      "qty": "1 box",
+      "location": "pantry",
+      "addedDate": "2026-07-05"
+    },
+    {
+      "id": 1783305637235.3506,
+      "name": "Nature Valley protein bars",
+      "qty": "1 box",
+      "location": "pantry",
+      "addedDate": "2026-07-05"
+    },
+    {
+      "id": 1783305637235.3882,
+      "name": "Seeds of Change quinoa & brown rice",
+      "qty": "1 pouch",
+      "location": "pantry",
+      "addedDate": "2026-07-05"
+    },
+    {
+      "id": 1783305637235.446,
+      "name": "Jif peanut butter",
+      "qty": "1 jar",
+      "location": "pantry",
+      "addedDate": "2026-07-05"
+    },
+    {
+      "id": 1783305637235.8933,
+      "name": "Ancient Grains granola",
+      "qty": "1 bag",
+      "location": "pantry",
+      "addedDate": "2026-07-05"
+    },
+    {
+      "id": 1783305637235.8706,
+      "name": "Spam (less sodium)",
+      "qty": "1 can",
+      "location": "pantry",
+      "addedDate": "2026-07-05"
+    },
+    {
+      "id": 1783305591510.8245,
+      "name": "Good Seed Bread",
+      "qty": "1 loaf",
+      "location": "freezer",
+      "addedDate": "2026-07-05"
+    },
+    {
+      "id": 1783305591510.7605,
+      "name": "Organic Green Beans",
+      "qty": "1 bag",
+      "location": "freezer",
+      "addedDate": "2026-07-05"
+    },
+    {
+      "id": 1783305591510.0613,
+      "name": "Greenridge Beef Sticks",
+      "qty": "1 package",
+      "location": "freezer",
+      "addedDate": "2026-07-05"
+    },
+    {
+      "id": 1783305591510.2397,
+      "name": "Angus Choice Beef Patties",
+      "qty": "1 bag",
+      "location": "freezer",
+      "addedDate": "2026-07-05"
+    },
+    {
+      "id": 1783305591510.3413,
+      "name": "Lightly Breaded Chicken Breast Chunks",
+      "qty": "1 bag",
+      "location": "freezer",
+      "addedDate": "2026-07-05"
+    },
+    {
+      "id": 1783305591510.0945,
+      "name": "Organic Daybreak Fruit Blend",
+      "qty": "1 bag",
+      "location": "freezer",
+      "addedDate": "2026-07-05"
+    },
+    {
+      "id": 1783305472874.7761,
+      "name": "Bananas",
+      "qty": "1 bunch",
+      "location": "fridge",
+      "addedDate": "2026-07-05"
+    },
+    {
+      "id": 1783305472874.5803,
+      "name": "Kimchi or salsa",
+      "qty": "1 jar",
+      "location": "fridge",
+      "addedDate": "2026-07-05"
+    },
+    {
+      "id": 1783305472874.1624,
+      "name": "Chobani yogurt",
+      "qty": "1 large tub",
+      "location": "fridge",
+      "addedDate": "2026-07-05"
+    },
+    {
+      "id": 1783305472874.149,
+      "name": "Coffee Mate French Vanilla creamer",
+      "qty": "1 bottle",
+      "location": "fridge",
+      "addedDate": "2026-07-05"
+    },
+    {
+      "id": 1783305472874.693,
+      "name": "Oikos Triple Zero yogurt",
+      "qty": "18 pack",
+      "location": "fridge",
+      "addedDate": "2026-07-05"
+    },
+    {
+      "id": 1783305472874.1511,
+      "name": "Cottage cheese (low fat)",
+      "qty": "1 tub",
+      "location": "fridge",
+      "addedDate": "2026-07-05"
+    },
+    {
+      "id": 1783305472874.1555,
+      "name": "Premier Protein shakes",
+      "qty": "3 cartons",
+      "location": "fridge",
+      "addedDate": "2026-07-05"
+    },
+    {
+      "id": 1783305472874.0315,
+      "name": "Blue Moon Belgian White (non-alcoholic)",
+      "qty": "1 can",
+      "location": "fridge",
+      "addedDate": "2026-07-05"
+    },
+    {
+      "id": 1783305472874.3604,
+      "name": "Eggs",
+      "qty": "1 dozen",
+      "location": "fridge",
+      "addedDate": "2026-07-05"
+    }
+  ],
+  "leftovers": []
+}
