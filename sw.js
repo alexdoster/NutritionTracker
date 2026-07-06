@@ -1,4 +1,4 @@
-const CACHE = "macros-v2";
+const CACHE = "macros-v3";
 const ASSETS = ["./", "./index.html", "./manifest.json", "./apple-touch-icon.png"];
 
 self.addEventListener("install", (event) => {
@@ -19,6 +19,9 @@ self.addEventListener("fetch", (event) => {
   if (req.method !== "GET") return;
   const url = new URL(req.url);
   if (url.origin !== location.origin) return;
+  // plan.json must always come from the network so a freshly pushed plan
+  // shows up on the first pull, not after two visits.
+  if (url.pathname.endsWith("/plan.json")) return;
 
   event.respondWith(
     caches.match(req, { ignoreSearch: true }).then((cached) => {

@@ -216,6 +216,9 @@ textarea { resize: vertical; line-height: 1.5; font-size: 15px; }
     <label class="field">Anthropic API key</label>
     <input type="password" id="f-key" placeholder="sk-ant-..." autocomplete="off">
 
+    <label class="field">GitHub token (for plan sync)</label>
+    <input type="password" id="f-ghtoken" placeholder="github_pat_... (optional)" autocomplete="off">
+
     <div class="row2">
       <div>
         <label class="field">Age</label>
@@ -433,6 +436,8 @@ textarea { resize: vertical; line-height: 1.5; font-size: 15px; }
   <button class="primary" id="btn-pantry-photo" style="margin-top:0">&#128247;&nbsp; Snap a shelf</button>
   <input type="file" id="pantry-file-input" accept="image/*" capture="environment" style="display:none">
   <button class="secondary" id="btn-cooking" style="margin-top:8px">&#127859;&nbsp; I'm cooking...</button>
+  <button class="secondary" id="btn-pantry-sync" style="margin-top:8px">&#8593;&nbsp; Sync for planning</button>
+  <p class="sub" id="sync-sub" style="margin-top:6px"></p>
 
   <h2>Add an item</h2>
   <div class="card">
@@ -493,7 +498,7 @@ textarea { resize: vertical; line-height: 1.5; font-size: 15px; }
     <button class="iconbtn" id="btn-plan-close" aria-label="Close">&#10005;</button>
   </div>
   <p class="sub" id="plan-goal-sub"></p>
-  <button class="primary" id="btn-plan-update" style="margin-top:0">Update my plan</button>
+  <button class="primary" id="btn-plan-update" style="margin-top:0">Pull latest plan</button>
   <div id="plan-days"></div>
   <div class="status err" id="plan-status"></div>
 </div>
@@ -1034,7 +1039,27 @@ function renderPantry() {
   });
 }
 
-$("btn-pantry").onclick = () => { $("pantry-status").textContent = ""; renderPantry(); show("screen-pantry"); };
+function renderSyncSub() {
+  const t = LS.get("mt_lastSync", null);
+  $("sync-sub").textContent = t ? `Last synced ${new Date(t).toLocaleDateString("en-US", { month: "short", day: "numeric" })} ${new Date(t).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}.` : "";
+}
+
+$("btn-pantry-sync").onclick = async () => {
+  $("pantry-status").textContent = "";
+  $("btn-pantry-sync").disabled = true;
+  $("btn-pantry-sync").textContent = "Syncing...";
+  try {
+    await syncPantryToGitHub();
+    renderSyncSub();
+  } catch (err) {
+    $("pantry-status").textContent = err.message;
+  } finally {
+    $("btn-pantry-sync").disabled = false;
+    $("btn-pantry-sync").innerHTML = "&#8593;&nbsp; Sync for planning";
+  }
+};
+
+$("btn-pantry").onclick = () => { $("pantry-status").textContent = ""; renderPantry(); renderSyncSub(); show("screen-pantry"); };
 $("btn-pantry-close").onclick = () => show("screen-main");
 
 $("btn-pantry-add-manual").onclick = () => {
@@ -1182,130 +1207,50 @@ $("btn-pantry-confirm-discard").onclick = () => { pantryScanItems = []; show("sc
 
 /* ---------- Plan ---------- */
 
-const MEAL_OPTION_PROPS = {
-  name: { type: "string" },
-  uses_leftover: { type: "boolean" },
-  leftover_name: { type: "string", description: "Name of the leftover batch this uses, empty string if none" },
-  items: {
-    type: "array",
-    items: {
-      type: "object",
-      properties: {
-        name: { type: "string" },
-        portion: { type: "string" },
-        calories: { type: "number" },
-        protein_g: { type: "number" },
-        carbs_g: { type: "number" },
-        fat_g: { type: "number" }
-      },
-      required: ["name", "portion", "calories", "protein_g", "carbs_g", "fat_g"],
-      additionalProperties: false
-    }
-  }
-};
-const MEAL_OPTION_SCHEMA = {
-  type: "object",
-  properties: MEAL_OPTION_PROPS,
-  required: ["name", "uses_leftover", "leftover_name", "items"],
-  additionalProperties: false
-};
-const PLAN_SCHEMA = {
-  type: "object",
-  properties: {
-    days: {
-      type: "array",
-      items: {
-        type: "object",
-        properties: {
-          date: { type: "string", description: "YYYY-MM-DD" },
-          workout: { type: "string", enum: ["push", "pull", "legs", "cardio", "rest"] },
-          workout_note: { type: "string", description: "One short optional note, e.g. an extra set or a swap using only equipment already listed. Empty string if none." },
-          meals: {
-            type: "object",
-            properties: {
-              breakfast: { type: "array", items: MEAL_OPTION_SCHEMA },
-              lunch: { type: "array", items: MEAL_OPTION_SCHEMA },
-              dinner: { type: "array", items: MEAL_OPTION_SCHEMA }
-            },
-            required: ["breakfast", "lunch", "dinner"],
-            additionalProperties: false
-          }
-        },
-        required: ["date", "workout", "workout_note", "meals"],
-        additionalProperties: false
-      }
-    },
-    shopping_suggestions: { type: "array", items: { type: "string" } }
-  },
-  required: ["days", "shopping_suggestions"],
-  additionalProperties: false
-};
+const GH_REPO = "alexdoster/NutritionTracker";
 
-function planWindowDates() {
-  const goal = currentGoalDate();
-  const dates = [];
-  const d = new Date(todayKey() + "T12:00:00");
-  for (let i = 0; i < 7; i++) {
-    const k = dateKey(d);
-    dates.push(k);
-    if (k >= goal) break;
-    d.setDate(d.getDate() + 1);
-  }
-  return dates;
+async function syncPantryToGitHub() {
+  const token = LS.get("mt_ghToken", "");
+  if (!token) throw new Error("Add your GitHub token in Settings first.");
+  const payload = {
+    syncedAt: new Date().toISOString(),
+    goalDate: currentGoalDate(),
+    pantry: getPantry(),
+    leftovers: getLeftovers()
+  };
+  const url = `https://api.github.com/repos/${GH_REPO}/contents/pantry.json`;
+  const headers = { authorization: `Bearer ${token}`, accept: "application/vnd.github+json" };
+  let sha;
+  const existing = await fetch(url + "?ref=main", { headers, cache: "no-store" });
+  if (existing.ok) sha = (await existing.json()).sha;
+  const content = btoa(unescape(encodeURIComponent(JSON.stringify(payload, null, 2))));
+  const resp = await fetch(url, {
+    method: "PUT",
+    headers,
+    body: JSON.stringify({ message: "Sync pantry from app", content, ...(sha ? { sha } : {}) })
+  });
+  if (resp.status === 401 || resp.status === 403) throw new Error("GitHub rejected the token. Check it in Settings.");
+  if (!resp.ok) throw new Error("Sync failed. Check your connection and try again.");
+  LS.set("mt_lastSync", Date.now());
 }
 
-async function generatePlan() {
-  const key = LS.get("mt_apiKey", "");
-  const t = LS.get("mt_targets", { cal: 2000, pro: 150, carb: 200, fat: 65 });
-  const pantry = getPantry();
-  const leftovers = getLeftovers();
-  const dates = planWindowDates();
-  const goal = currentGoalDate();
-
-  const prompt = [
-    `Daily targets: ${t.cal} kcal, ${t.pro}g protein, ${t.carb}g carbs, ${t.fat}g fat.`,
-    `Goal date: ${goal}. Build a day-by-day plan for exactly these dates: ${dates.join(", ")}.`,
-    `Cooking for one person. Prefers quick, easy meals but is open to experimenting. Equipment on hand: stovetop, oven, air fryer, rice cooker, microwave, toaster oven, and a 16oz blender for shakes.`,
-    `Existing workout routine has four types: push, pull, legs, cardio, plus rest days. Assign one of push/pull/legs/cardio/rest to each date, building a sensible week (e.g. push/pull/legs spaced out, at least one rest day, and lean toward an extra cardio day this week to support a fat-loss goal). Do not invent brand new exercises; workout_note may suggest at most one small tweak using only bodyweight, dumbbell, or machine work, and must stay empty most days.`,
-    `Leftovers on hand, use these first before proposing anything new that requires fresh cooking: ${leftovers.length ? leftovers.map(l => `${l.name} (${l.servingsRemaining} servings left)`).join("; ") : "none"}.`,
-    `Pantry and fridge on hand: ${pantry.length ? pantry.map(p => `${p.name} (${p.qty || "amount unknown"}, ${p.location})`).join("; ") : "nothing logged yet"}.`,
-    `For each date give breakfast, lunch, and dinner, each with two interchangeable options built primarily from what's on hand. Mark uses_leftover true and name the matching leftover_name exactly when an option consumes a logged leftover. Sizes should roughly balance across the day to hit the daily targets. List a short shopping_suggestions array of items worth buying to round out the week; empty array if pantry is already sufficient.`
-  ].join("\n");
-
-  const resp = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      "x-api-key": key,
-      "anthropic-version": "2023-06-01",
-      "anthropic-dangerous-direct-browser-access": "true"
-    },
-    body: JSON.stringify({
-      model: "claude-opus-4-8",
-      max_tokens: 16000,
-      thinking: { type: "adaptive" },
-      output_config: { format: { type: "json_schema", schema: PLAN_SCHEMA } },
-      messages: [{ role: "user", content: prompt }]
-    })
-  });
-  if (!resp.ok) {
-    const body = await resp.json().catch(() => null);
-    const e = new Error(body && body.error ? body.error.message : "");
-    e.status = resp.status;
-    throw e;
+async function pullPlan() {
+  let resp;
+  try {
+    resp = await fetch("plan.json?v=" + Date.now(), { cache: "no-store" });
+  } catch {
+    throw new Error("Couldn't reach the server. Are you offline?");
   }
-  const data = await resp.json();
-  recordUsage("claude-opus-4-8", data.usage);
-  const textBlock = data.content.find(b => b.type === "text");
-  if (!textBlock) throw new Error("No plan came back. Try again.");
-  if (data.stop_reason === "max_tokens") throw new Error("The plan was too long and got cut off. Try again, or shorten the goal window.");
+  if (resp.status === 404) throw new Error("No plan published yet. Sync your pantry, then ask Claude to build one.");
+  if (!resp.ok) throw new Error("Couldn't fetch the plan. Try again in a minute.");
   let plan;
   try {
-    plan = JSON.parse(textBlock.text);
+    plan = await resp.json();
   } catch {
-    throw new Error("The plan came back malformed. Try tapping Update my plan again.");
+    throw new Error("The published plan is malformed.");
   }
-  LS.set("mt_plan", { generatedAt: Date.now(), goalDate: goal, days: plan.days, shoppingSuggestions: plan.shopping_suggestions || [] });
+  if (!plan || !Array.isArray(plan.days) || !plan.days.length) throw new Error("The published plan is empty.");
+  LS.set("mt_plan", { generatedAt: plan.generatedAt || Date.now(), goalDate: plan.goalDate || currentGoalDate(), days: plan.days, shoppingSuggestions: plan.shoppingSuggestions || [] });
   return plan;
 }
 
@@ -1316,11 +1261,11 @@ function fmtPlanDate(k) {
 function renderPlan() {
   const goal = currentGoalDate();
   const daysLeft = Math.max(0, Math.round((new Date(goal + "T12:00:00") - new Date(todayKey() + "T12:00:00")) / 86400000));
-  $("plan-goal-sub").textContent = `Goal date ${fmtPlanDate(goal)}, ${daysLeft} day${daysLeft === 1 ? "" : "s"} away.`;
-
   const plan = LS.get("mt_plan", null);
+  const built = plan && plan.generatedAt ? ` Plan built ${new Date(plan.generatedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}.` : "";
+  $("plan-goal-sub").textContent = `Goal date ${fmtPlanDate(goal)}, ${daysLeft} day${daysLeft === 1 ? "" : "s"} away.${built}`;
   if (!plan || !plan.days || !plan.days.length) {
-    $("plan-days").innerHTML = `<div class="empty">No plan yet. Tap "Update my plan" to generate one from your pantry and targets.</div>`;
+    $("plan-days").innerHTML = `<div class="empty">No plan yet. Sync your pantry, ask Claude to build a plan, then tap "Pull latest plan".</div>`;
     return;
   }
 
@@ -1365,19 +1310,17 @@ $("btn-plan").onclick = () => { $("plan-status").textContent = ""; renderPlan();
 $("btn-plan-close").onclick = () => show("screen-main");
 
 $("btn-plan-update").onclick = async () => {
-  const apiKey = LS.get("mt_apiKey", "");
-  if (!apiKey) { $("plan-status").textContent = "Add your Anthropic API key in Settings first."; return; }
   $("plan-status").textContent = "";
   $("btn-plan-update").disabled = true;
-  $("btn-plan-update").textContent = "Building your plan...";
+  $("btn-plan-update").textContent = "Checking for a new plan...";
   try {
-    await generatePlan();
+    await pullPlan();
     renderPlan();
   } catch (err) {
-    $("plan-status").textContent = friendlyError(err);
+    $("plan-status").textContent = err.message;
   } finally {
     $("btn-plan-update").disabled = false;
-    $("btn-plan-update").textContent = "Update my plan";
+    $("btn-plan-update").textContent = "Pull latest plan";
   }
 };
 
@@ -1523,6 +1466,7 @@ function openSetup(isEdit) {
   const prof = LS.get("mt_profile", null);
   const t = LS.get("mt_targets", null);
   $("f-key").value = key;
+  $("f-ghtoken").value = LS.get("mt_ghToken", "");
   if (prof) {
     $("f-age").value = prof.age; $("f-sex").value = prof.sex;
     $("f-weight").value = prof.weight; $("f-ft").value = prof.ft; $("f-in").value = prof.inch;
@@ -1588,6 +1532,7 @@ $("btn-save").onclick = () => {
   const t = { cal: +$("t-cal").value, pro: +$("t-pro").value, carb: +$("t-carb").value, fat: +$("t-fat").value };
   if (!t.cal || !t.pro) { $("setup-status").textContent = "Targets look empty. Tap Calculate targets first."; return; }
   LS.set("mt_apiKey", key);
+  LS.set("mt_ghToken", $("f-ghtoken").value.trim());
   LS.set("mt_profile", p);
   LS.set("mt_targets", t);
   LS.set("mt_burns", {
