@@ -142,6 +142,7 @@ textarea { resize: vertical; line-height: 1.5; font-size: 15px; }
 
 .status { font-size: 14px; text-align: center; padding: 10px 0; color: var(--text-secondary); min-height: 24px; }
 .status.err { color: var(--critical); }
+.status.err.ok { color: #2a9d5c; }
 
 /* Analyzing overlay */
 #analyzing { position: fixed; inset: 0; background: var(--page); display: none; z-index: 50;
@@ -1045,14 +1046,18 @@ function renderSyncSub() {
 }
 
 $("btn-pantry-sync").onclick = async () => {
+  $("pantry-status").classList.remove("ok");
   $("pantry-status").textContent = "";
   $("btn-pantry-sync").disabled = true;
   $("btn-pantry-sync").textContent = "Syncing...";
   try {
     await syncPantryToGitHub();
     renderSyncSub();
+    $("pantry-status").classList.add("ok");
+    $("pantry-status").textContent = "Synced.";
   } catch (err) {
-    $("pantry-status").textContent = err.message;
+    const msg = (err && err.message) ? err.message : ("Sync failed: " + String(err));
+    $("pantry-status").textContent = msg;
   } finally {
     $("btn-pantry-sync").disabled = false;
     $("btn-pantry-sync").innerHTML = "&#8593;&nbsp; Sync for planning";
@@ -1220,17 +1225,39 @@ async function syncPantryToGitHub() {
   };
   const url = `https://api.github.com/repos/${GH_REPO}/contents/pantry.json`;
   const headers = { authorization: `Bearer ${token}`, accept: "application/vnd.github+json" };
+
   let sha;
-  const existing = await fetch(url + "?ref=main", { headers, cache: "no-store" });
-  if (existing.ok) sha = (await existing.json()).sha;
+  let existing;
+  try {
+    existing = await fetch(url + "?ref=main", { headers, cache: "no-store" });
+  } catch (e) {
+    throw new Error("Network error reaching GitHub (lookup): " + (e && e.message ? e.message : String(e)));
+  }
+  if (existing.ok) {
+    sha = (await existing.json()).sha;
+  } else if (existing.status !== 404) {
+    let detail = "";
+    try { detail = (await existing.json()).message || ""; } catch {}
+    throw new Error(`GitHub lookup failed (${existing.status}${detail ? ": " + detail : ""}).`);
+  }
+
   const content = btoa(unescape(encodeURIComponent(JSON.stringify(payload, null, 2))));
-  const resp = await fetch(url, {
-    method: "PUT",
-    headers,
-    body: JSON.stringify({ message: "Sync pantry from app", content, ...(sha ? { sha } : {}) })
-  });
-  if (resp.status === 401 || resp.status === 403) throw new Error("GitHub rejected the token. Check it in Settings.");
-  if (!resp.ok) throw new Error("Sync failed. Check your connection and try again.");
+  let resp;
+  try {
+    resp = await fetch(url, {
+      method: "PUT",
+      headers,
+      body: JSON.stringify({ message: "Sync pantry from app", content, ...(sha ? { sha } : {}) })
+    });
+  } catch (e) {
+    throw new Error("Network error reaching GitHub (write): " + (e && e.message ? e.message : String(e)));
+  }
+  if (!resp.ok) {
+    let detail = "";
+    try { detail = (await resp.json()).message || ""; } catch {}
+    if (resp.status === 401 || resp.status === 403) throw new Error(`GitHub rejected the token (${resp.status}${detail ? ": " + detail : ""}).`);
+    throw new Error(`Sync failed (${resp.status}${detail ? ": " + detail : ""}).`);
+  }
   LS.set("mt_lastSync", Date.now());
 }
 
