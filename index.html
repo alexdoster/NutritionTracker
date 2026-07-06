@@ -507,6 +507,10 @@ textarea { resize: vertical; line-height: 1.5; font-size: 15px; }
   <p class="sub" id="plan-goal-sub"></p>
   <button class="primary" id="btn-plan-update" style="margin-top:0">Pull latest plan</button>
   <div id="plan-days"></div>
+  <div class="card" id="shopping-card" style="display:none">
+    <h2 style="margin-top:0">Shopping list</h2>
+    <ul id="shopping-list" style="margin:0; padding-left:20px"></ul>
+  </div>
   <div class="status err" id="plan-status"></div>
 </div>
 
@@ -1299,12 +1303,21 @@ function renderPlan() {
   $("plan-goal-sub").textContent = `Goal date ${fmtPlanDate(goal)}, ${daysLeft} day${daysLeft === 1 ? "" : "s"} away.${built}`;
   if (!plan || !plan.days || !plan.days.length) {
     $("plan-days").innerHTML = `<div class="empty">No plan yet. Sync your pantry, ask Claude to build a plan, then tap "Pull latest plan".</div>`;
+    $("shopping-card").style.display = "none";
     return;
   }
   const upcoming = plan.days.filter(d => d.date >= todayKey());
   if (!upcoming.length) {
     $("plan-days").innerHTML = `<div class="empty">This plan has run its course. Sync your pantry and ask Claude for a new one.</div>`;
+    $("shopping-card").style.display = "none";
     return;
+  }
+  const suggestions = plan.shoppingSuggestions || [];
+  if (suggestions.length) {
+    $("shopping-list").innerHTML = suggestions.map(s => `<li>${escapeHtml(s)}</li>`).join("");
+    $("shopping-card").style.display = "block";
+  } else {
+    $("shopping-card").style.display = "none";
   }
 
   $("plan-days").innerHTML = upcoming.map(day => {
@@ -1948,7 +1961,7 @@ $("btn-discard").onclick = () => { confirmBase = null; confirmLeftoverName = nul
 
 /* ---------- Boot ---------- */
 
-const APP_BUILD = "2026-07-06.6";
+const APP_BUILD = "2026-07-06.7";
 
 migrateFoods();
 seedFoods();
