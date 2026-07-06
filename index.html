@@ -329,6 +329,7 @@ textarea { resize: vertical; line-height: 1.5; font-size: 15px; }
   <div class="card" id="entries"></div>
 
   <div class="status err" id="main-status"></div>
+  <p class="sub" id="app-build" style="text-align:center; margin-top:24px"></p>
 </div>
 
 <!-- CONFIRM -->
@@ -1917,8 +1918,11 @@ $("btn-discard").onclick = () => { confirmBase = null; confirmLeftoverName = nul
 
 /* ---------- Boot ---------- */
 
+const APP_BUILD = "2026-07-06.4";
+
 migrateFoods();
 seedFoods();
+$("app-build").textContent = `Build ${APP_BUILD}`;
 
 if (LS.get("mt_apiKey", "") && LS.get("mt_targets", null)) {
   renderMain();
