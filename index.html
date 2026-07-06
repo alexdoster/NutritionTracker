@@ -283,6 +283,12 @@ textarea { resize: vertical; line-height: 1.5; font-size: 15px; }
     <button class="primary" id="btn-save" style="margin-bottom:0">Save and start</button>
   </div>
 
+  <div class="card" id="usage-card" style="display:none">
+    <h2 style="margin-top:0">API cost</h2>
+    <p class="sub" id="usage-summary"></p>
+    <button class="secondary" id="btn-usage-reset" style="margin-bottom:0">Reset usage total</button>
+  </div>
+
   <div class="status err" id="setup-status"></div>
   <button class="secondary" id="btn-cancel-setup" style="display:none">Cancel</button>
 </div>
@@ -522,6 +528,25 @@ const LS = {
   get(k, fallback) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : fallback; } catch { return fallback; } },
   set(k, v) { localStorage.setItem(k, JSON.stringify(v)); }
 };
+
+const MODEL_PRICING = {
+  "claude-opus-4-8": { in: 5, out: 25 },
+  "claude-haiku-4-5": { in: 1, out: 5 }
+};
+function recordUsage(model, usage) {
+  if (!usage) return;
+  const price = MODEL_PRICING[model];
+  if (!price) return;
+  const cost = (usage.input_tokens / 1e6) * price.in + (usage.output_tokens / 1e6) * price.out;
+  const log = LS.get("mt_usage", { totalCost: 0, since: Date.now(), byModel: {} });
+  log.totalCost += cost;
+  const m = log.byModel[model] || { calls: 0, cost: 0 };
+  m.calls += 1;
+  m.cost += cost;
+  log.byModel[model] = m;
+  LS.set("mt_usage", log);
+}
+function getUsage() { return LS.get("mt_usage", { totalCost: 0, since: Date.now(), byModel: {} }); }
 
 const dateKey = (d) =>
   d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
@@ -1091,6 +1116,7 @@ async function scanPantryPhoto(base64Jpeg) {
     throw e;
   }
   const data = await resp.json();
+  recordUsage("claude-opus-4-8", data.usage);
   const textBlock = data.content.find(b => b.type === "text");
   if (!textBlock) throw new Error("No result came back. Try another photo.");
   return JSON.parse(textBlock.text);
@@ -1256,7 +1282,7 @@ async function generatePlan() {
     },
     body: JSON.stringify({
       model: "claude-opus-4-8",
-      max_tokens: 8000,
+      max_tokens: 16000,
       thinking: { type: "adaptive" },
       output_config: { format: { type: "json_schema", schema: PLAN_SCHEMA } },
       messages: [{ role: "user", content: prompt }]
@@ -1269,9 +1295,16 @@ async function generatePlan() {
     throw e;
   }
   const data = await resp.json();
+  recordUsage("claude-opus-4-8", data.usage);
   const textBlock = data.content.find(b => b.type === "text");
   if (!textBlock) throw new Error("No plan came back. Try again.");
-  const plan = JSON.parse(textBlock.text);
+  if (data.stop_reason === "max_tokens") throw new Error("The plan was too long and got cut off. Try again, or shorten the goal window.");
+  let plan;
+  try {
+    plan = JSON.parse(textBlock.text);
+  } catch {
+    throw new Error("The plan came back malformed. Try tapping Update my plan again.");
+  }
   LS.set("mt_plan", { generatedAt: Date.now(), goalDate: goal, days: plan.days, shoppingSuggestions: plan.shopping_suggestions || [] });
   return plan;
 }
@@ -1405,6 +1438,7 @@ async function askTrainer(question) {
     throw e;
   }
   const data = await resp.json();
+  recordUsage("claude-haiku-4-5", data.usage);
   const textBlock = data.content.find(b => b.type === "text");
   return textBlock ? textBlock.text : "No response came back.";
 }
@@ -1504,8 +1538,24 @@ function openSetup(isEdit) {
   $("b-push").value = b.push; $("b-pull").value = b.pull;
   $("b-legs").value = b.legs; $("b-cardio").value = b.cardio;
   $("setup-status").textContent = "";
+  renderUsage();
   show("screen-setup");
 }
+
+function renderUsage() {
+  const u = getUsage();
+  const calls = Object.values(u.byModel).reduce((n, m) => n + m.calls, 0);
+  if (!calls) { $("usage-card").style.display = "none"; return; }
+  const since = new Date(u.since).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  const lines = Object.entries(u.byModel).map(([model, m]) => `${model}: ${m.calls} call${m.calls === 1 ? "" : "s"}, $${m.cost.toFixed(2)}`);
+  $("usage-summary").innerHTML = `Since ${since}: <strong>$${u.totalCost.toFixed(2)}</strong> total.<br>${lines.join("<br>")}`;
+  $("usage-card").style.display = "block";
+}
+
+$("btn-usage-reset").onclick = () => {
+  LS.set("mt_usage", { totalCost: 0, since: Date.now(), byModel: {} });
+  renderUsage();
+};
 
 $("btn-calc").onclick = () => {
   const p = readProfile();
@@ -1780,6 +1830,7 @@ async function analyzeMeal(base64Jpeg) {
     throw e;
   }
   const data = await resp.json();
+  recordUsage("claude-opus-4-8", data.usage);
   const textBlock = data.content.find(b => b.type === "text");
   if (!textBlock) throw new Error("No result came back. Try another photo.");
   return JSON.parse(textBlock.text);
