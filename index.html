@@ -160,6 +160,49 @@ textarea { resize: vertical; line-height: 1.5; font-size: 15px; }
 .item-macros { color: var(--text-muted); font-size: 13px; font-variant-numeric: tabular-nums; }
 .totals { display: flex; justify-content: space-between; padding-top: 12px; margin-top: 4px; border-top: 1px solid var(--hairline); font-weight: 600; }
 .notes { font-size: 13px; color: var(--text-muted); margin-top: 10px; }
+
+/* Topbar icons wrap on narrow screens */
+.topbar .icons { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 2px; max-width: 60%; }
+
+/* Pantry */
+.pantry-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--hairline); }
+.pantry-row:last-child { border-bottom: none; }
+.pantry-name { font-size: 15px; font-weight: 500; }
+.pantry-detail { font-size: 12.5px; color: var(--text-muted); margin-top: 2px; }
+.tag { display: inline-block; font-size: 11px; color: var(--text-muted); background: var(--page); border: 1px solid var(--border); border-radius: 8px; padding: 1px 7px; margin-left: 6px; }
+
+/* Plan */
+.plan-day { margin-bottom: 14px; }
+.plan-day-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+.plan-date { font-size: 14px; font-weight: 600; }
+.plan-workout { font-size: 12.5px; color: var(--accent); font-weight: 600; }
+.plan-slot { margin-bottom: 10px; }
+.plan-slot:last-child { margin-bottom: 0; }
+.plan-slot-label { font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.03em; color: var(--text-muted); margin-bottom: 4px; }
+.plan-opts { display: flex; gap: 8px; }
+.plan-opt { flex: 1; text-align: left; background: var(--page); border: 1px solid var(--border); border-radius: 10px; padding: 8px 10px; font-family: inherit; cursor: pointer; }
+.plan-opt-name { font-size: 13.5px; font-weight: 500; color: var(--text-primary); }
+.plan-opt-cal { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.plan-note { font-size: 12.5px; color: var(--text-muted); margin-top: 4px; font-style: italic; }
+.plan-empty-slot { font-size: 13px; color: var(--text-muted); }
+
+/* Ask chat */
+.ask-log { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
+.ask-msg { max-width: 85%; padding: 10px 13px; border-radius: 14px; font-size: 14.5px; line-height: 1.4; white-space: pre-wrap; }
+.ask-msg.user { align-self: flex-end; background: var(--accent); color: #fff; border-bottom-right-radius: 4px; }
+.ask-msg.assistant { align-self: flex-start; background: var(--surface-1); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
+.ask-input-row { display: flex; gap: 8px; align-items: flex-end; }
+.ask-input-row textarea { flex: 1; margin: 0; }
+.ask-send { background: var(--accent); color: #fff; border: none; border-radius: 10px; padding: 12px 16px; font-family: inherit; font-weight: 600; cursor: pointer; }
+.ask-send:disabled { opacity: 0.5; }
+
+/* Checkbox list rows (pantry scan confirm) */
+.check-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--hairline); cursor: pointer; }
+.check-row:last-child { border-bottom: none; }
+.check-row.off { opacity: 0.4; }
+.check-box { width: 20px; height: 20px; border-radius: 5px; border: 1px solid var(--border); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 13px; }
+.check-row.off .check-box { background: none; }
+.check-row:not(.off) .check-box { background: var(--accent); border-color: var(--accent); color: #fff; }
 </style>
 </head>
 <body>
@@ -251,9 +294,12 @@ textarea { resize: vertical; line-height: 1.5; font-size: 15px; }
       <h1>Today</h1>
       <div class="datebadge" id="today-label"></div>
     </div>
-    <div>
+    <div class="icons">
       <button class="iconbtn" id="btn-progress" aria-label="Progress">&#128200;</button>
       <button class="iconbtn" id="btn-workouts" aria-label="Workouts">&#127947;&#65039;</button>
+      <button class="iconbtn" id="btn-pantry" aria-label="Pantry">&#129382;</button>
+      <button class="iconbtn" id="btn-plan" aria-label="Plan">&#128203;</button>
+      <button class="iconbtn" id="btn-ask" aria-label="Ask">&#128172;</button>
       <button class="iconbtn" id="btn-settings" aria-label="Settings">&#9881;</button>
     </div>
   </div>
@@ -341,6 +387,8 @@ textarea { resize: vertical; line-height: 1.5; font-size: 15px; }
     <h2 style="margin-top:0">Last 7 days</h2>
     <div id="week-list"></div>
   </div>
+
+  <button class="secondary" id="btn-export">Export progress</button>
 </div>
 
 <!-- MEALS: RECENT + SAVED -->
@@ -367,6 +415,96 @@ textarea { resize: vertical; line-height: 1.5; font-size: 15px; }
   <div id="routines"></div>
   <button class="primary" id="btn-edit-workouts">Edit workouts</button>
   <button class="secondary" id="btn-cancel-edit" style="display:none">Cancel</button>
+</div>
+
+<!-- PANTRY -->
+<div class="screen" id="screen-pantry">
+  <div class="topbar">
+    <h1>Pantry</h1>
+    <button class="iconbtn" id="btn-pantry-close" aria-label="Close">&#10005;</button>
+  </div>
+  <p class="sub">What you have on hand. Snap a shelf or add items by hand. The plan pulls from this first.</p>
+  <button class="primary" id="btn-pantry-photo" style="margin-top:0">&#128247;&nbsp; Snap a shelf</button>
+  <input type="file" id="pantry-file-input" accept="image/*" capture="environment" style="display:none">
+  <button class="secondary" id="btn-cooking" style="margin-top:8px">&#127859;&nbsp; I'm cooking...</button>
+
+  <h2>Add an item</h2>
+  <div class="card">
+    <label class="field" style="margin-top:0">Name</label>
+    <input type="text" id="p-name" placeholder="Chicken thighs" autocomplete="off">
+    <div class="row2">
+      <div><label class="field">Quantity</label><input type="text" id="p-qty" placeholder="4 thighs"></div>
+      <div><label class="field">Location</label>
+        <select id="p-location">
+          <option value="fridge">Fridge</option>
+          <option value="freezer">Freezer</option>
+          <option value="pantry">Pantry</option>
+        </select>
+      </div>
+    </div>
+    <button class="primary" id="btn-pantry-add-manual" style="margin-bottom:0">Add to pantry</button>
+  </div>
+
+  <h2>On hand</h2>
+  <div class="card" id="pantry-list"></div>
+
+  <h2>Leftovers</h2>
+  <div class="card" id="leftovers-list"></div>
+
+  <div class="status err" id="pantry-status"></div>
+</div>
+
+<!-- PANTRY SCAN CONFIRM -->
+<div class="screen" id="screen-pantry-confirm">
+  <h1>Found these items</h1>
+  <p class="sub">Tap to leave one out, then add the rest to your pantry.</p>
+  <div class="card" id="pantry-confirm-items"></div>
+  <button class="primary" id="btn-pantry-confirm-add">Add to pantry</button>
+  <button class="secondary" id="btn-pantry-confirm-discard">Discard</button>
+</div>
+
+<!-- I'M COOKING -->
+<div class="screen" id="screen-cooking">
+  <div class="topbar">
+    <h1>I'm cooking</h1>
+    <button class="iconbtn" id="btn-cooking-close" aria-label="Close">&#10005;</button>
+  </div>
+  <p class="sub">Log a batch you're making so the plan schedules the leftovers instead of proposing something new.</p>
+  <div class="card">
+    <label class="field" style="margin-top:0">What are you cooking</label>
+    <input type="text" id="c-name" placeholder="Chicken thighs" autocomplete="off">
+    <label class="field">Servings this makes</label>
+    <input type="number" id="c-servings" inputmode="numeric" placeholder="4">
+  </div>
+  <button class="primary" id="btn-cooking-save">Save leftovers</button>
+  <div class="status err" id="cooking-status"></div>
+</div>
+
+<!-- PLAN -->
+<div class="screen" id="screen-plan">
+  <div class="topbar">
+    <h1>Plan</h1>
+    <button class="iconbtn" id="btn-plan-close" aria-label="Close">&#10005;</button>
+  </div>
+  <p class="sub" id="plan-goal-sub"></p>
+  <button class="primary" id="btn-plan-update" style="margin-top:0">Update my plan</button>
+  <div id="plan-days"></div>
+  <div class="status err" id="plan-status"></div>
+</div>
+
+<!-- ASK -->
+<div class="screen" id="screen-ask">
+  <div class="topbar">
+    <h1>Ask</h1>
+    <button class="iconbtn" id="btn-ask-close" aria-label="Close">&#10005;</button>
+  </div>
+  <p class="sub">Trainer and nutritionist questions, answered using your current stats and plan.</p>
+  <div class="card ask-log" id="ask-log"></div>
+  <div class="ask-input-row">
+    <textarea id="ask-input" rows="2" placeholder="Ask anything..."></textarea>
+    <button class="ask-send" id="btn-ask-send">Send</button>
+  </div>
+  <div class="status err" id="ask-status"></div>
 </div>
 
 <!-- ANALYZING -->
@@ -403,7 +541,8 @@ const DEFAULT_ROUTINES = {
     "Seated Overhead Dumbbell Press, 3 x 12 @ 35 lb",
     "Pec Fly Machine, 2 x 12 @ 140 lb, 1 x 12 @ 127.5 lb (30 lb dumbbells)",
     "Cable Rope Triceps Pushdown, 3 x 12 @ 75 to 80 lb (25 lb skull crushers, 125 cable machine)",
-    "Dumbbell Lateral Raises, 3 x 12 @ 20 lb",
+    "Dumbbell Lateral Raises, 4 x 12 @ 20 lb",
+    "Front Raises (dumbbell or plate), 2 x 15 @ 15 lb",
     "Life goals check in"
   ].join("\n"),
   pull: [
@@ -411,7 +550,8 @@ const DEFAULT_ROUTINES = {
     "Lat Pulldown, 3 x 12 @ 140",
     "Assisted Pull-Ups, 3 x 8 @ 45 lb assist (30 if first)",
     "Seated Cable Row, 3 x 12 @ 100, smith or cable",
-    "Dumbbell Hammer Curls (DB or rope), 3 x 12 @ 25"
+    "Dumbbell Hammer Curls (DB or rope), 3 x 12 @ 25",
+    "Rear Delt Fly (cable or dumbbell), 3 x 15 @ light"
   ].join("\n"),
   legs: [
     "Leg Press, 3 x 12 @ 280",
@@ -795,6 +935,531 @@ function toggleWorkout(id) {
   LS.set("mt_workouts", all);
 }
 
+/* ---------- Goals ---------- */
+
+const DEFAULT_GOALS = { cycle1End: "2026-07-30", cycle2End: "2026-09-25" };
+function getGoals() { return Object.assign({}, DEFAULT_GOALS, LS.get("mt_goals", {})); }
+function currentGoalDate() {
+  const g = getGoals();
+  return todayKey() <= g.cycle1End ? g.cycle1End : g.cycle2End;
+}
+
+/* ---------- Pantry ---------- */
+
+function getPantry() { return LS.get("mt_pantry", []); }
+function setPantry(list) { LS.set("mt_pantry", list); }
+function addPantryItem(name, qty, location) {
+  const list = getPantry();
+  list.unshift({ id: Date.now() + Math.random(), name, qty: qty || "", location: location || "pantry", addedDate: todayKey() });
+  setPantry(list);
+}
+function removePantryItem(id) {
+  setPantry(getPantry().filter(i => String(i.id) !== String(id)));
+}
+
+function getLeftovers() { return LS.get("mt_leftovers", []); }
+function setLeftovers(list) { LS.set("mt_leftovers", list); }
+function addLeftover(name, servings) {
+  const list = getLeftovers();
+  list.unshift({ id: Date.now() + Math.random(), name, servingsRemaining: servings, createdDate: todayKey() });
+  setLeftovers(list);
+}
+function consumeLeftoverByName(name) {
+  if (!name) return;
+  const k = name.trim().toLowerCase();
+  const list = getLeftovers();
+  const match = list.find(l => l.name.trim().toLowerCase() === k && l.servingsRemaining > 0);
+  if (!match) return;
+  match.servingsRemaining -= 1;
+  setLeftovers(list.filter(l => l.servingsRemaining > 0));
+}
+function removeLeftover(id) {
+  setLeftovers(getLeftovers().filter(l => String(l.id) !== String(id)));
+}
+
+function renderPantry() {
+  const pantry = getPantry();
+  $("pantry-list").innerHTML = pantry.length === 0
+    ? `<div class="empty">Nothing added yet. Snap a shelf or add an item by hand.</div>`
+    : pantry.map(i => `
+      <div class="pantry-row" data-id="${i.id}">
+        <div>
+          <div class="pantry-name">${escapeHtml(i.name)}<span class="tag">${escapeHtml(i.location)}</span></div>
+          <div class="pantry-detail">${escapeHtml(i.qty || "")}</div>
+        </div>
+        <button class="entry-del" data-id="${i.id}" aria-label="Remove">&#10005;</button>
+      </div>`).join("");
+  $("pantry-list").querySelectorAll(".entry-del").forEach(btn => {
+    btn.onclick = () => { removePantryItem(btn.dataset.id); renderPantry(); };
+  });
+
+  const leftovers = getLeftovers();
+  $("leftovers-list").innerHTML = leftovers.length === 0
+    ? `<div class="empty">No leftovers logged. Use "I'm cooking" after a batch.</div>`
+    : leftovers.map(l => `
+      <div class="pantry-row" data-id="${l.id}">
+        <div>
+          <div class="pantry-name">${escapeHtml(l.name)}</div>
+          <div class="pantry-detail">${l.servingsRemaining} serving${l.servingsRemaining === 1 ? "" : "s"} left</div>
+        </div>
+        <button class="entry-del" data-id="${l.id}" aria-label="Remove">&#10005;</button>
+      </div>`).join("");
+  $("leftovers-list").querySelectorAll(".entry-del").forEach(btn => {
+    btn.onclick = () => { removeLeftover(btn.dataset.id); renderPantry(); };
+  });
+}
+
+$("btn-pantry").onclick = () => { $("pantry-status").textContent = ""; renderPantry(); show("screen-pantry"); };
+$("btn-pantry-close").onclick = () => show("screen-main");
+
+$("btn-pantry-add-manual").onclick = () => {
+  const name = $("p-name").value.trim();
+  if (!name) { $("pantry-status").textContent = "Give it a name first."; return; }
+  addPantryItem(name, $("p-qty").value.trim(), $("p-location").value);
+  $("p-name").value = ""; $("p-qty").value = "";
+  $("pantry-status").textContent = "";
+  renderPantry();
+};
+
+$("btn-cooking").onclick = () => {
+  $("c-name").value = ""; $("c-servings").value = "";
+  $("cooking-status").textContent = "";
+  show("screen-cooking");
+};
+$("btn-cooking-close").onclick = () => show("screen-pantry");
+$("btn-cooking-save").onclick = () => {
+  const name = $("c-name").value.trim();
+  const servings = +$("c-servings").value;
+  if (!name || !servings) { $("cooking-status").textContent = "Name and servings are both needed."; return; }
+  addLeftover(name, servings);
+  show("screen-pantry");
+  renderPantry();
+};
+
+/* ---------- Pantry photo scan ---------- */
+
+const PANTRY_SCAN_SCHEMA = {
+  type: "object",
+  properties: {
+    items: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          name: { type: "string" },
+          quantity: { type: "string", description: "Estimated amount, e.g. 4 thighs, 1 lb, half gallon" },
+          location: { type: "string", enum: ["fridge", "freezer", "pantry"] }
+        },
+        required: ["name", "quantity", "location"],
+        additionalProperties: false
+      }
+    },
+    is_food: { type: "boolean" }
+  },
+  required: ["items", "is_food"],
+  additionalProperties: false
+};
+
+async function scanPantryPhoto(base64Jpeg) {
+  const key = LS.get("mt_apiKey", "");
+  const resp = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-api-key": key,
+      "anthropic-version": "2023-06-01",
+      "anthropic-dangerous-direct-browser-access": "true"
+    },
+    body: JSON.stringify({
+      model: "claude-opus-4-8",
+      max_tokens: 4000,
+      thinking: { type: "adaptive" },
+      output_config: { format: { type: "json_schema", schema: PANTRY_SCAN_SCHEMA } },
+      messages: [{
+        role: "user",
+        content: [
+          { type: "image", source: { type: "base64", media_type: "image/jpeg", data: base64Jpeg } },
+          { type: "text", text: "This is a photo of a fridge, freezer, or pantry shelf. Identify each distinct food item visible, with a short name, an estimated quantity (e.g. '4 thighs', '1 lb', 'half gallon', '3 cans'), and which of fridge, freezer, or pantry it's in based on context. If the photo does not show food storage, set is_food to false." }
+        ]
+      }]
+    })
+  });
+  if (!resp.ok) {
+    const body = await resp.json().catch(() => null);
+    const e = new Error(body && body.error ? body.error.message : "");
+    e.status = resp.status;
+    throw e;
+  }
+  const data = await resp.json();
+  const textBlock = data.content.find(b => b.type === "text");
+  if (!textBlock) throw new Error("No result came back. Try another photo.");
+  return JSON.parse(textBlock.text);
+}
+
+$("btn-pantry-photo").onclick = () => $("pantry-file-input").click();
+
+let pantryScanItems = [];
+let pantryScanExcluded = new Set();
+
+$("pantry-file-input").onchange = async () => {
+  const file = $("pantry-file-input").files[0];
+  $("pantry-file-input").value = "";
+  if (!file) return;
+  $("pantry-status").textContent = "";
+  try {
+    const dataUrl = await resizeImage(file, 1200, 0.85);
+    $("preview-img").src = dataUrl;
+    $("analyzing").classList.add("active");
+    const result = await scanPantryPhoto(dataUrl.split(",")[1]);
+    $("analyzing").classList.remove("active");
+    if (!result.is_food || !result.items.length) {
+      $("pantry-status").textContent = "That didn't look like food storage. Try again.";
+      return;
+    }
+    pantryScanItems = result.items;
+    pantryScanExcluded = new Set();
+    renderPantryConfirm();
+    show("screen-pantry-confirm");
+  } catch (err) {
+    $("analyzing").classList.remove("active");
+    $("pantry-status").textContent = friendlyError(err);
+  }
+};
+
+function renderPantryConfirm() {
+  $("pantry-confirm-items").innerHTML = pantryScanItems.map((it, i) => `
+    <div class="check-row${pantryScanExcluded.has(i) ? " off" : ""}" data-i="${i}">
+      <div class="check-box">&#10003;</div>
+      <div>
+        <div class="pantry-name">${escapeHtml(it.name)}<span class="tag">${escapeHtml(it.location)}</span></div>
+        <div class="pantry-detail">${escapeHtml(it.quantity)}</div>
+      </div>
+    </div>`).join("");
+  $("pantry-confirm-items").querySelectorAll(".check-row").forEach(row => {
+    row.onclick = () => {
+      const i = +row.dataset.i;
+      if (pantryScanExcluded.has(i)) pantryScanExcluded.delete(i); else pantryScanExcluded.add(i);
+      renderPantryConfirm();
+    };
+  });
+}
+
+$("btn-pantry-confirm-add").onclick = () => {
+  pantryScanItems.forEach((it, i) => {
+    if (!pantryScanExcluded.has(i)) addPantryItem(it.name, it.quantity, it.location);
+  });
+  pantryScanItems = [];
+  renderPantry();
+  show("screen-pantry");
+};
+$("btn-pantry-confirm-discard").onclick = () => { pantryScanItems = []; show("screen-pantry"); };
+
+/* ---------- Plan ---------- */
+
+const MEAL_OPTION_PROPS = {
+  name: { type: "string" },
+  uses_leftover: { type: "boolean" },
+  leftover_name: { type: "string", description: "Name of the leftover batch this uses, empty string if none" },
+  items: {
+    type: "array",
+    items: {
+      type: "object",
+      properties: {
+        name: { type: "string" },
+        portion: { type: "string" },
+        calories: { type: "number" },
+        protein_g: { type: "number" },
+        carbs_g: { type: "number" },
+        fat_g: { type: "number" }
+      },
+      required: ["name", "portion", "calories", "protein_g", "carbs_g", "fat_g"],
+      additionalProperties: false
+    }
+  }
+};
+const MEAL_OPTION_SCHEMA = {
+  type: "object",
+  properties: MEAL_OPTION_PROPS,
+  required: ["name", "uses_leftover", "leftover_name", "items"],
+  additionalProperties: false
+};
+const PLAN_SCHEMA = {
+  type: "object",
+  properties: {
+    days: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          date: { type: "string", description: "YYYY-MM-DD" },
+          workout: { type: "string", enum: ["push", "pull", "legs", "cardio", "rest"] },
+          workout_note: { type: "string", description: "One short optional note, e.g. an extra set or a swap using only equipment already listed. Empty string if none." },
+          meals: {
+            type: "object",
+            properties: {
+              breakfast: { type: "array", items: MEAL_OPTION_SCHEMA },
+              lunch: { type: "array", items: MEAL_OPTION_SCHEMA },
+              dinner: { type: "array", items: MEAL_OPTION_SCHEMA }
+            },
+            required: ["breakfast", "lunch", "dinner"],
+            additionalProperties: false
+          }
+        },
+        required: ["date", "workout", "workout_note", "meals"],
+        additionalProperties: false
+      }
+    },
+    shopping_suggestions: { type: "array", items: { type: "string" } }
+  },
+  required: ["days", "shopping_suggestions"],
+  additionalProperties: false
+};
+
+function planWindowDates() {
+  const goal = currentGoalDate();
+  const dates = [];
+  const d = new Date(todayKey() + "T12:00:00");
+  for (let i = 0; i < 7; i++) {
+    const k = dateKey(d);
+    dates.push(k);
+    if (k >= goal) break;
+    d.setDate(d.getDate() + 1);
+  }
+  return dates;
+}
+
+async function generatePlan() {
+  const key = LS.get("mt_apiKey", "");
+  const t = LS.get("mt_targets", { cal: 2000, pro: 150, carb: 200, fat: 65 });
+  const pantry = getPantry();
+  const leftovers = getLeftovers();
+  const dates = planWindowDates();
+  const goal = currentGoalDate();
+
+  const prompt = [
+    `Daily targets: ${t.cal} kcal, ${t.pro}g protein, ${t.carb}g carbs, ${t.fat}g fat.`,
+    `Goal date: ${goal}. Build a day-by-day plan for exactly these dates: ${dates.join(", ")}.`,
+    `Cooking for one person. Prefers quick, easy meals but is open to experimenting. Equipment on hand: stovetop, oven, air fryer, rice cooker, microwave, toaster oven, and a 16oz blender for shakes.`,
+    `Existing workout routine has four types: push, pull, legs, cardio, plus rest days. Assign one of push/pull/legs/cardio/rest to each date, building a sensible week (e.g. push/pull/legs spaced out, at least one rest day, and lean toward an extra cardio day this week to support a fat-loss goal). Do not invent brand new exercises; workout_note may suggest at most one small tweak using only bodyweight, dumbbell, or machine work, and must stay empty most days.`,
+    `Leftovers on hand, use these first before proposing anything new that requires fresh cooking: ${leftovers.length ? leftovers.map(l => `${l.name} (${l.servingsRemaining} servings left)`).join("; ") : "none"}.`,
+    `Pantry and fridge on hand: ${pantry.length ? pantry.map(p => `${p.name} (${p.qty || "amount unknown"}, ${p.location})`).join("; ") : "nothing logged yet"}.`,
+    `For each date give breakfast, lunch, and dinner, each with two interchangeable options built primarily from what's on hand. Mark uses_leftover true and name the matching leftover_name exactly when an option consumes a logged leftover. Sizes should roughly balance across the day to hit the daily targets. List a short shopping_suggestions array of items worth buying to round out the week; empty array if pantry is already sufficient.`
+  ].join("\n");
+
+  const resp = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-api-key": key,
+      "anthropic-version": "2023-06-01",
+      "anthropic-dangerous-direct-browser-access": "true"
+    },
+    body: JSON.stringify({
+      model: "claude-opus-4-8",
+      max_tokens: 8000,
+      thinking: { type: "adaptive" },
+      output_config: { format: { type: "json_schema", schema: PLAN_SCHEMA } },
+      messages: [{ role: "user", content: prompt }]
+    })
+  });
+  if (!resp.ok) {
+    const body = await resp.json().catch(() => null);
+    const e = new Error(body && body.error ? body.error.message : "");
+    e.status = resp.status;
+    throw e;
+  }
+  const data = await resp.json();
+  const textBlock = data.content.find(b => b.type === "text");
+  if (!textBlock) throw new Error("No plan came back. Try again.");
+  const plan = JSON.parse(textBlock.text);
+  LS.set("mt_plan", { generatedAt: Date.now(), goalDate: goal, days: plan.days, shoppingSuggestions: plan.shopping_suggestions || [] });
+  return plan;
+}
+
+function fmtPlanDate(k) {
+  return new Date(k + "T12:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+}
+
+function renderPlan() {
+  const goal = currentGoalDate();
+  const daysLeft = Math.max(0, Math.round((new Date(goal + "T12:00:00") - new Date(todayKey() + "T12:00:00")) / 86400000));
+  $("plan-goal-sub").textContent = `Goal date ${fmtPlanDate(goal)}, ${daysLeft} day${daysLeft === 1 ? "" : "s"} away.`;
+
+  const plan = LS.get("mt_plan", null);
+  if (!plan || !plan.days || !plan.days.length) {
+    $("plan-days").innerHTML = `<div class="empty">No plan yet. Tap "Update my plan" to generate one from your pantry and targets.</div>`;
+    return;
+  }
+
+  $("plan-days").innerHTML = plan.days.map(day => {
+    const slots = ["breakfast", "lunch", "dinner"].map(slot => {
+      const opts = (day.meals && day.meals[slot]) || [];
+      if (!opts.length) return `<div class="plan-slot"><div class="plan-slot-label">${slot}</div><div class="plan-empty-slot">Nothing planned</div></div>`;
+      return `<div class="plan-slot">
+        <div class="plan-slot-label">${slot}</div>
+        <div class="plan-opts">
+          ${opts.map((o, i) => {
+            const tot = itemTotals(o.items);
+            return `<button class="plan-opt" data-date="${day.date}" data-slot="${slot}" data-i="${i}">
+              <div class="plan-opt-name">${escapeHtml(o.name)}</div>
+              <div class="plan-opt-cal">${fmt(tot.cal)} kcal${o.uses_leftover ? " &middot; leftover" : ""}</div>
+            </button>`;
+          }).join("")}
+        </div>
+      </div>`;
+    }).join("");
+    const workoutLabel = day.workout === "rest" ? "Rest" : day.workout.charAt(0).toUpperCase() + day.workout.slice(1) + " day";
+    return `<div class="plan-day">
+      <div class="plan-day-head">
+        <span class="plan-date">${fmtPlanDate(day.date)}</span>
+        <span class="plan-workout">${escapeHtml(workoutLabel)}</span>
+      </div>
+      ${day.workout_note ? `<div class="plan-note">${escapeHtml(day.workout_note)}</div>` : ""}
+      ${slots}
+    </div>`;
+  }).join("");
+
+  $("plan-days").querySelectorAll(".plan-opt").forEach(btn => {
+    btn.onclick = () => {
+      const day = plan.days.find(d => d.date === btn.dataset.date);
+      const opt = day.meals[btn.dataset.slot][+btn.dataset.i];
+      openConfirm({ name: opt.name, items: opt.items, notes: "" }, opt.uses_leftover ? opt.leftover_name : null);
+    };
+  });
+}
+
+$("btn-plan").onclick = () => { $("plan-status").textContent = ""; renderPlan(); show("screen-plan"); };
+$("btn-plan-close").onclick = () => show("screen-main");
+
+$("btn-plan-update").onclick = async () => {
+  const apiKey = LS.get("mt_apiKey", "");
+  if (!apiKey) { $("plan-status").textContent = "Add your Anthropic API key in Settings first."; return; }
+  $("plan-status").textContent = "";
+  $("btn-plan-update").disabled = true;
+  $("btn-plan-update").textContent = "Building your plan...";
+  try {
+    await generatePlan();
+    renderPlan();
+  } catch (err) {
+    $("plan-status").textContent = friendlyError(err);
+  } finally {
+    $("btn-plan-update").disabled = false;
+    $("btn-plan-update").textContent = "Update my plan";
+  }
+};
+
+/* ---------- Ask ---------- */
+
+function getAskHistory() { return LS.get("mt_ask_history", []); }
+function setAskHistory(list) {
+  const keys = list.slice(-20);
+  LS.set("mt_ask_history", keys);
+}
+
+function renderAsk() {
+  const log = getAskHistory();
+  $("ask-log").innerHTML = log.map(m => `<div class="ask-msg ${m.role}">${escapeHtml(m.text)}</div>`).join("");
+  $("ask-log").scrollTop = $("ask-log").scrollHeight;
+}
+
+$("btn-ask").onclick = () => { $("ask-status").textContent = ""; renderAsk(); show("screen-ask"); };
+$("btn-ask-close").onclick = () => show("screen-main");
+
+async function askTrainer(question) {
+  const key = LS.get("mt_apiKey", "");
+  const t = LS.get("mt_targets", { cal: 2000, pro: 150, carb: 200, fat: 65 });
+  const entries = getEntries();
+  const sum = entries.reduce((a, e) => ({ cal: a.cal + e.cal, pro: a.pro + e.pro, carb: a.carb + e.carb, fat: a.fat + e.fat }), { cal: 0, pro: 0, carb: 0, fat: 0 });
+  const s = weightStats();
+  const plan = LS.get("mt_plan", null);
+  const goal = currentGoalDate();
+
+  const context = [
+    `You are a trainer and nutritionist helping someone reach their best shape by ${goal}.`,
+    `Daily targets: ${t.cal} kcal, ${t.pro}g protein, ${t.carb}g carbs, ${t.fat}g fat.`,
+    `Logged so far today: ${fmt(sum.cal)} kcal, ${fmt(sum.pro)}g protein.`,
+    s.count ? `Recent weight trend: ${s.rate !== null && s.rate !== undefined ? (s.rate >= 0 ? "+" : "") + s.rate.toFixed(1) + " lb/week" : "not enough data yet"}.` : "No weight logged yet.",
+    plan ? `Has an active meal and workout plan through ${plan.goalDate}.` : "No plan generated yet.",
+    "Answer briefly and directly, like a knowledgeable coach texting back. No filler, no disclaimers unless medically relevant."
+  ].join("\n");
+
+  const resp = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-api-key": key,
+      "anthropic-version": "2023-06-01",
+      "anthropic-dangerous-direct-browser-access": "true"
+    },
+    body: JSON.stringify({
+      model: "claude-haiku-4-5",
+      max_tokens: 1024,
+      system: context,
+      messages: [{ role: "user", content: question }]
+    })
+  });
+  if (!resp.ok) {
+    const body = await resp.json().catch(() => null);
+    const e = new Error(body && body.error ? body.error.message : "");
+    e.status = resp.status;
+    throw e;
+  }
+  const data = await resp.json();
+  const textBlock = data.content.find(b => b.type === "text");
+  return textBlock ? textBlock.text : "No response came back.";
+}
+
+$("btn-ask-send").onclick = async () => {
+  const q = $("ask-input").value.trim();
+  if (!q) return;
+  const apiKey = LS.get("mt_apiKey", "");
+  if (!apiKey) { $("ask-status").textContent = "Add your Anthropic API key in Settings first."; return; }
+  const log = getAskHistory();
+  log.push({ role: "user", text: q });
+  setAskHistory(log);
+  $("ask-input").value = "";
+  $("ask-status").textContent = "";
+  $("btn-ask-send").disabled = true;
+  renderAsk();
+  try {
+    const answer = await askTrainer(q);
+    const log2 = getAskHistory();
+    log2.push({ role: "assistant", text: answer });
+    setAskHistory(log2);
+    renderAsk();
+  } catch (err) {
+    $("ask-status").textContent = friendlyError(err);
+  } finally {
+    $("btn-ask-send").disabled = false;
+  }
+};
+
+/* ---------- Export ---------- */
+
+$("btn-export").onclick = () => {
+  const snapshot = {
+    exportedAt: new Date().toISOString(),
+    profile: LS.get("mt_profile", null),
+    targets: LS.get("mt_targets", null),
+    goals: getGoals(),
+    weights: getWeights(),
+    entries: LS.get("mt_entries", {}),
+    workouts: LS.get("mt_workouts", {}),
+    pantry: getPantry(),
+    leftovers: getLeftovers(),
+    plan: LS.get("mt_plan", null)
+  };
+  const blob = new Blob([JSON.stringify(snapshot, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `macros-export-${todayKey()}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+};
+
 /* ---------- Targets ---------- */
 
 function calcTargets(p) {
@@ -803,7 +1468,7 @@ function calcTargets(p) {
   let bmr = 10 * kg + 6.25 * cm - 5 * p.age;
   bmr += p.sex === "m" ? 5 : -161;
   const cal = Math.round((bmr * p.activity + p.goal) / 10) * 10;
-  const pro = Math.round(p.weight * 0.8);
+  const pro = Math.round(p.weight * 1.0);
   const fat = Math.round(cal * 0.30 / 9);
   const carb = Math.round((cal - pro * 4 - fat * 9) / 4);
   return { cal, pro, carb, fat };
@@ -1133,6 +1798,7 @@ function friendlyError(err) {
 let confirmBase = null;
 let confirmMult = 1;
 let confirmExcluded = new Set();
+let confirmLeftoverName = null;
 
 function itemTotals(items) {
   return items.reduce((a, it) => ({
@@ -1156,10 +1822,11 @@ function showConfirm(result) {
   openConfirm({ name: result.meal_name, items: result.items, notes: result.notes || "" });
 }
 
-function openConfirm(base) {
+function openConfirm(base, leftoverName) {
   confirmBase = base;
   confirmMult = 1;
   confirmExcluded = new Set();
+  confirmLeftoverName = leftoverName || null;
   renderConfirm();
   show("screen-confirm");
 }
@@ -1216,12 +1883,14 @@ $("btn-add").onclick = () => {
       cal: full.cal, pro: full.pro, carb: full.carb, fat: full.fat,
       items: confirmBase.items
     });
+    if (confirmLeftoverName) consumeLeftoverByName(confirmLeftoverName);
     confirmBase = null;
+    confirmLeftoverName = null;
   }
   renderMain();
   show("screen-main");
 };
-$("btn-discard").onclick = () => { confirmBase = null; show("screen-main"); };
+$("btn-discard").onclick = () => { confirmBase = null; confirmLeftoverName = null; show("screen-main"); };
 
 /* ---------- Boot ---------- */
 
