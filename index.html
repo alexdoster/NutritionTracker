@@ -141,6 +141,7 @@ textarea { resize: vertical; line-height: 1.5; font-size: 15px; }
 .row2 > div { flex: 1; }
 
 .status { font-size: 14px; text-align: center; padding: 10px 0; color: var(--text-secondary); min-height: 24px; }
+.linklike { background: none; border: none; color: var(--accent); font-size: 13px; padding: 0; cursor: pointer; }
 .status.err { color: var(--critical); }
 .status.err.ok { color: #2a9d5c; }
 
@@ -217,8 +218,12 @@ textarea { resize: vertical; line-height: 1.5; font-size: 15px; }
     <label class="field">Anthropic API key</label>
     <input type="password" id="f-key" placeholder="sk-ant-..." autocomplete="off">
 
-    <label class="field">GitHub token (for plan sync)</label>
+    <div style="display:flex; justify-content:space-between; align-items:baseline">
+      <label class="field" style="margin:0">GitHub token (for plan sync)</label>
+      <button type="button" id="btn-toggle-ghtoken" class="linklike">Show</button>
+    </div>
     <input type="password" id="f-ghtoken" placeholder="github_pat_... (optional)" autocomplete="off">
+    <p class="sub" id="ghtoken-hint" style="margin-top:4px"></p>
 
     <div class="row2">
       <div>
@@ -1495,6 +1500,9 @@ function openSetup(isEdit) {
   const t = LS.get("mt_targets", null);
   $("f-key").value = key;
   $("f-ghtoken").value = LS.get("mt_ghToken", "");
+  $("f-ghtoken").type = "password";
+  $("btn-toggle-ghtoken").textContent = "Show";
+  renderGhTokenHint();
   if (prof) {
     $("f-age").value = prof.age; $("f-sex").value = prof.sex;
     $("f-weight").value = prof.weight; $("f-ft").value = prof.ft; $("f-in").value = prof.inch;
@@ -1551,6 +1559,23 @@ function readProfile() {
   $("setup-status").textContent = "";
   return p;
 }
+
+function renderGhTokenHint() {
+  const raw = $("f-ghtoken").value;
+  const v = raw.trim();
+  if (!v) { $("ghtoken-hint").textContent = ""; return; }
+  if (raw !== v) { $("ghtoken-hint").textContent = "Extra space or line break in there, will be trimmed on save."; return; }
+  if (/^bearer\s/i.test(v)) { $("ghtoken-hint").textContent = `Paste just the token, not the word "Bearer".`; return; }
+  if (!/^(github_pat_|ghp_|gho_|ghu_|ghs_|ghr_)/.test(v)) { $("ghtoken-hint").textContent = "Doesn't look like a GitHub token (expected it to start with github_pat_ or ghp_)."; return; }
+  $("ghtoken-hint").textContent = `Looks like a valid token, ${v.length} characters.`;
+}
+$("f-ghtoken").addEventListener("input", renderGhTokenHint);
+
+$("btn-toggle-ghtoken").onclick = () => {
+  const showing = $("f-ghtoken").type === "text";
+  $("f-ghtoken").type = showing ? "password" : "text";
+  $("btn-toggle-ghtoken").textContent = showing ? "Show" : "Hide";
+};
 
 $("btn-save").onclick = () => {
   const key = $("f-key").value.trim();
