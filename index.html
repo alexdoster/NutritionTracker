@@ -171,6 +171,13 @@ textarea { resize: vertical; line-height: 1.5; font-size: 15px; }
 .pantry-row:last-child { border-bottom: none; }
 .pantry-name { font-size: 15px; font-weight: 500; }
 .pantry-detail { font-size: 12.5px; color: var(--text-muted); margin-top: 2px; }
+
+/* Food lookup results */
+.lookup-row { padding: 10px 0; border-bottom: 1px solid var(--hairline); cursor: pointer; }
+.lookup-row:last-child { border-bottom: none; }
+.lookup-row:active { opacity: 0.6; }
+.lookup-name { font-size: 14.5px; font-weight: 500; }
+.lookup-detail { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
 .tag { display: inline-block; font-size: 11px; color: var(--text-muted); background: var(--page); border: 1px solid var(--border); border-radius: 8px; padding: 1px 7px; margin-left: 6px; }
 
 /* Plan */
@@ -224,6 +231,10 @@ textarea { resize: vertical; line-height: 1.5; font-size: 15px; }
     </div>
     <input type="password" id="f-ghtoken" placeholder="github_pat_... (optional)" autocomplete="off">
     <p class="sub" id="ghtoken-hint" style="margin-top:4px"></p>
+
+    <label class="field">USDA food lookup key (optional)</label>
+    <input type="text" id="f-fdckey" placeholder="Free key from fdc.nal.usda.gov" autocomplete="off">
+    <p class="sub" style="margin-top:4px">Powers the "Look up" button on Quick add, so you can type a food name and get calories and macros without a photo or the Anthropic API. Works without a key too, just on a shared, slower limit. Get your own free key at <a href="https://fdc.nal.usda.gov/api-key-signup" target="_blank" rel="noopener">fdc.nal.usda.gov</a>.</p>
 
     <div class="row2">
       <div>
@@ -367,7 +378,11 @@ textarea { resize: vertical; line-height: 1.5; font-size: 15px; }
   <p class="sub">For foods you know from the label. No photo, no connection needed. It shows up in your recent meals too.</p>
   <div class="card">
     <label class="field" style="margin-top:0">Name</label>
-    <input type="text" id="q-name" placeholder="Protein shake, 2 scoops" autocomplete="off">
+    <div style="display:flex; gap:8px">
+      <input type="text" id="q-name" placeholder="Protein shake, 2 scoops" autocomplete="off" style="flex:1">
+      <button type="button" class="secondary" id="btn-food-lookup" style="margin:0; padding:0 14px; width:auto; flex:0 0 auto; white-space:nowrap">Look up</button>
+    </div>
+    <div id="lookup-results" style="display:none; margin-top:4px"></div>
     <div class="row2">
       <div><label class="field">Calories</label><input type="number" id="q-cal" inputmode="numeric"></div>
       <div><label class="field">Protein (g)</label><input type="number" id="q-pro" inputmode="numeric"></div>
@@ -810,10 +825,125 @@ $("food-search").oninput = () => renderFoods();
 
 $("btn-quick").onclick = () => {
   ["q-name", "q-cal", "q-pro", "q-carb", "q-fat"].forEach(id => $(id).value = "");
+  $("quick-status").classList.remove("ok");
   $("quick-status").textContent = "";
+  $("lookup-results").style.display = "none";
+  $("lookup-results").innerHTML = "";
   show("screen-quickadd");
 };
 $("btn-quick-close").onclick = () => show("screen-main");
+
+/* ---------- Food lookup (USDA FoodData Central, no Anthropic key needed) ---------- */
+
+function getFdcKey() { return LS.get("mt_fdcKey", "").trim() || "DEMO_KEY"; }
+
+async function fdcSearch(query) {
+  const url = "https://api.nal.usda.gov/fdc/v1/foods/search?" + new URLSearchParams({
+    api_key: getFdcKey(),
+    query,
+    pageSize: 8,
+    dataType: "Foundation,SR Legacy,Survey (FNDDS)"
+  });
+  const resp = await fetch(url);
+  if (!resp.ok) { const e = new Error("Lookup failed"); e.status = resp.status; throw e; }
+  const data = await resp.json();
+  return (data.foods || []).map(f => ({ fdcId: f.fdcId, description: f.description }));
+}
+
+async function fdcDetail(fdcId) {
+  const url = `https://api.nal.usda.gov/fdc/v1/food/${fdcId}?` + new URLSearchParams({ api_key: getFdcKey() });
+  const resp = await fetch(url);
+  if (!resp.ok) { const e = new Error("Lookup failed"); e.status = resp.status; throw e; }
+  const data = await resp.json();
+  const per100 = { cal: 0, pro: 0, carb: 0, fat: 0 };
+  (data.foodNutrients || []).forEach(n => {
+    const name = n.nutrient && n.nutrient.name;
+    const unit = n.nutrient && n.nutrient.unitName;
+    const amount = n.amount || 0;
+    if (name === "Energy" && unit === "kcal") per100.cal = amount;
+    if (name === "Protein") per100.pro = amount;
+    if (name === "Carbohydrate, by difference") per100.carb = amount;
+    if (name === "Total lipid (fat)") per100.fat = amount;
+  });
+  const portions = (data.foodPortions || [])
+    .filter(p => p.gramWeight && !/tbsp|tsp|teaspoon|tablespoon/i.test(p.modifier || ""))
+    .sort((a, b) => a.gramWeight - b.gramWeight);
+  const portion = portions[0];
+  const grams = portion ? portion.gramWeight : 100;
+  const label = portion ? `${portion.amount || ""} ${portion.modifier || ""}`.trim() : "100 g";
+  const factor = grams / 100;
+  return {
+    label, grams,
+    cal: Math.round(per100.cal * factor),
+    pro: Math.round(per100.pro * factor * 10) / 10,
+    carb: Math.round(per100.carb * factor * 10) / 10,
+    fat: Math.round(per100.fat * factor * 10) / 10
+  };
+}
+
+function fdcFriendlyError(err) {
+  if (err.status === 401 || err.status === 403) return "That USDA key was rejected. Check it in Settings.";
+  if (err.status === 429) return "Rate limited on the shared free tier. Add your own free key in Settings (fdc.nal.usda.gov).";
+  if (err.message && err.message.includes("Failed to fetch")) return "No connection. Check your network and try again.";
+  return "Lookup failed. Try again.";
+}
+
+let lookupResults = [];
+
+function renderLookupResults() {
+  const box = $("lookup-results");
+  box.style.display = "block";
+  if (!lookupResults.length) {
+    box.innerHTML = `<div class="lookup-detail">No matches. Try a simpler name, like "egg" instead of "boiled egg with pepper".</div>`;
+    return;
+  }
+  box.innerHTML = lookupResults.map((f, i) => `
+    <div class="lookup-row" data-i="${i}">
+      <div class="lookup-name">${escapeHtml(f.description)}</div>
+    </div>`).join("");
+  box.querySelectorAll(".lookup-row").forEach(row => {
+    row.onclick = () => selectLookupResult(+row.dataset.i);
+  });
+}
+
+async function selectLookupResult(i) {
+  const f = lookupResults[i];
+  $("lookup-results").style.display = "none";
+  $("lookup-results").innerHTML = "";
+  $("quick-status").classList.remove("ok");
+  $("quick-status").textContent = "Loading...";
+  try {
+    const d = await fdcDetail(f.fdcId);
+    $("q-cal").value = d.cal;
+    $("q-pro").value = d.pro;
+    $("q-carb").value = d.carb;
+    $("q-fat").value = d.fat;
+    $("quick-status").classList.add("ok");
+    $("quick-status").textContent = `Filled for ${d.label} (${Math.round(d.grams)} g). Adjust below if your portion is different.`;
+  } catch (err) {
+    $("quick-status").classList.remove("ok");
+    $("quick-status").textContent = fdcFriendlyError(err);
+  }
+}
+
+$("btn-food-lookup").onclick = async () => {
+  const query = $("q-name").value.trim();
+  $("quick-status").classList.remove("ok");
+  $("quick-status").textContent = "";
+  if (!query) { $("quick-status").textContent = "Type a food name first."; return; }
+  $("btn-food-lookup").disabled = true;
+  $("btn-food-lookup").textContent = "...";
+  try {
+    lookupResults = await fdcSearch(query);
+    renderLookupResults();
+  } catch (err) {
+    $("quick-status").textContent = fdcFriendlyError(err);
+    $("lookup-results").style.display = "none";
+  } finally {
+    $("btn-food-lookup").disabled = false;
+    $("btn-food-lookup").textContent = "Look up";
+  }
+};
 
 $("btn-quick-add").onclick = () => {
   const name = $("q-name").value.trim();
@@ -1521,6 +1651,7 @@ function openSetup(isEdit) {
   $("f-ghtoken").type = "password";
   $("btn-toggle-ghtoken").textContent = "Show";
   renderGhTokenHint();
+  $("f-fdckey").value = LS.get("mt_fdcKey", "");
   if (prof) {
     $("f-age").value = prof.age; $("f-sex").value = prof.sex;
     $("f-weight").value = prof.weight; $("f-ft").value = prof.ft; $("f-in").value = prof.inch;
@@ -1604,6 +1735,7 @@ $("btn-save").onclick = () => {
   if (!t.cal || !t.pro) { $("setup-status").textContent = "Targets look empty. Tap Calculate targets first."; return; }
   LS.set("mt_apiKey", key);
   LS.set("mt_ghToken", $("f-ghtoken").value.trim());
+  LS.set("mt_fdcKey", $("f-fdckey").value.trim());
   LS.set("mt_profile", p);
   LS.set("mt_targets", t);
   LS.set("mt_burns", {
